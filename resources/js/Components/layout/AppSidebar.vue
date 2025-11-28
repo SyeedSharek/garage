@@ -57,6 +57,7 @@ import {
   Home02Icon,
   GroupIcon,
   ClipboardIcon,
+  ShoppingBagIcon,
   File01Icon,
 } from '@hugeicons/core-free-icons';
 
@@ -85,6 +86,18 @@ const navItems = computed(() => [
     href: route('services.index'),
     icon: ClipboardIcon,
     active: page.url.startsWith('/services'),
+  },
+  {
+    name: 'Orders',
+    href: route('orders.index'),
+    icon: ShoppingBagIcon,
+    active: page.url.startsWith('/orders'),
+  },
+  {
+    name: 'Invoices',
+    href: route('invoices.index'),
+    icon: File01Icon,
+    active: page.url.startsWith('/invoices'),
   },
   {
     name: 'Reports',

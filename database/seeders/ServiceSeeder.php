@@ -14,7 +14,7 @@ class ServiceSeeder extends Seeder
     {
         $services = [
             [
-                'code' => 'SVC-001',
+                'code' => '001',
                 'name' => [
                     'en' => 'Engine Oil/Oil Filter',
                     'ar' => 'زيت المحرك / فلتر الزيت',
@@ -24,7 +24,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'code' => 'SVC-002',
+                'code' => '002',
                 'name' => [
                     'en' => 'Gear Oil/Gear Oil filter',
                     'ar' => 'زيت الجير / فلتر الزيت',
@@ -34,7 +34,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'code' => 'SVC-003',
+                'code' => '003',
                 'name' => [
                     'en' => 'Differential Oil Change',
                     'ar' => 'زيت الدفريشن',
@@ -44,7 +44,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 3,
             ],
             [
-                'code' => 'SVC-004',
+                'code' => '004',
                 'name' => [
                     'en' => 'Radiator Welding / Cleaning',
                     'ar' => 'تنظيف / تلحيم الراديتور',
@@ -54,7 +54,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 4,
             ],
             [
-                'code' => 'SVC-005',
+                'code' => '005',
                 'name' => [
                     'en' => 'New Radiator / Service',
                     'ar' => 'تركيب / خدمة الراديتور الجديد',
@@ -64,7 +64,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 5,
             ],
             [
-                'code' => 'SVC-006',
+                'code' => '006',
                 'name' => [
                     'en' => 'Radiator Cover Change',
                     'ar' => 'تغير غطاء الراديتور',
@@ -74,7 +74,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 6,
             ],
             [
-                'code' => 'SVC-007',
+                'code' => '007',
                 'name' => [
                     'en' => 'Condenser (New / Old) Service',
                     'ar' => 'خدمة الكوندنس (جديد / قديم)',
@@ -84,7 +84,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 7,
             ],
             [
-                'code' => 'SVC-008',
+                'code' => '008',
                 'name' => [
                     'en' => 'Battery',
                     'ar' => 'بطارية',
@@ -94,7 +94,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 8,
             ],
             [
-                'code' => 'SVC-009',
+                'code' => '009',
                 'name' => [
                     'en' => 'AC Compressor (New / Old Labor)',
                     'ar' => 'خدمة كومبريسور التكييف (جديد / قديم)',
@@ -104,7 +104,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 9,
             ],
             [
-                'code' => 'SVC-010',
+                'code' => '010',
                 'name' => [
                     'en' => 'Dashboard Service',
                     'ar' => 'خدمة فك طبلون السيارة',
@@ -114,7 +114,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 10,
             ],
             [
-                'code' => 'SVC-011',
+                'code' => '011',
                 'name' => [
                     'en' => 'AC Evaporator Service',
                     'ar' => 'خدمة ثلاجة التكييف',
@@ -124,7 +124,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 11,
             ],
             [
-                'code' => 'SVC-012',
+                'code' => '012',
                 'name' => [
                     'en' => 'AC Expansion Valve',
                     'ar' => 'خدمة فالف التكييف',
@@ -134,7 +134,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 12,
             ],
             [
-                'code' => 'SVC-013',
+                'code' => '013',
                 'name' => [
                     'en' => 'AC Gas/Compressor Oil',
                     'ar' => 'غاز التكييف / زيت الكومبريسور',
@@ -144,7 +144,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 13,
             ],
             [
-                'code' => 'SVC-014',
+                'code' => '014',
                 'name' => [
                     'en' => 'AC Hose Change / Welding',
                     'ar' => 'تغير هوز التكييف / تلحيم الهوز',
@@ -154,7 +154,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 14,
             ],
             [
-                'code' => 'SVC-015',
+                'code' => '015',
                 'name' => [
                     'en' => 'Power Steering Hose Change',
                     'ar' => 'تغير هوز الباور ستيرنق',
@@ -164,7 +164,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 15,
             ],
             [
-                'code' => 'SVC-016',
+                'code' => '016',
                 'name' => [
                     'en' => 'AC Cabin Filter Change',
                     'ar' => 'تغير فلتر التكييف',
@@ -174,7 +174,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 16,
             ],
             [
-                'code' => 'SVC-017',
+                'code' => '017',
                 'name' => [
                     'en' => 'Disc Polish Service',
                     'ar' => 'خدمة ثورنة الدرامويلات',
@@ -184,7 +184,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 17,
             ],
             [
-                'code' => 'SVC-018',
+                'code' => '018',
                 'name' => [
                     'en' => 'Compressor Service',
                     'ar' => 'خدمة الكومبريسور',
@@ -194,7 +194,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 18,
             ],
             [
-                'code' => 'SVC-019',
+                'code' => '019',
                 'name' => [
                     'en' => 'Alternator Service',
                     'ar' => 'خدمة داينمو السيارة',
@@ -204,7 +204,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 19,
             ],
             [
-                'code' => 'SVC-020',
+                'code' => '020',
                 'name' => [
                     'en' => 'Starter Motor Service',
                     'ar' => 'خدمة موتور التشغيل',
@@ -214,7 +214,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 20,
             ],
             [
-                'code' => 'SVC-021',
+                'code' => '021',
                 'name' => [
                     'en' => 'Fan Motor Service',
                     'ar' => 'خدمة مراوح السيارة',
@@ -224,7 +224,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 21,
             ],
             [
-                'code' => 'SVC-022',
+                'code' => '022',
                 'name' => [
                     'en' => 'Belt Change',
                     'ar' => 'تغير سير',
@@ -234,7 +234,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 22,
             ],
             [
-                'code' => 'SVC-023',
+                'code' => '023',
                 'name' => [
                     'en' => 'Bulb Change',
                     'ar' => 'تغير لمبة',
@@ -244,7 +244,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 23,
             ],
             [
-                'code' => 'SVC-024',
+                'code' => '024',
                 'name' => [
                     'en' => 'Lower / Upper Arm bush Service',
                     'ar' => 'خدمة بوشات الأذرعة',
@@ -254,7 +254,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 24,
             ],
             [
-                'code' => 'SVC-025',
+                'code' => '025',
                 'name' => [
                     'en' => 'Link rod / Tie end rod / Ball joint Service',
                     'ar' => 'خدمة رودات / بال جوينت',
@@ -264,7 +264,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 25,
             ],
             [
-                'code' => 'SVC-026',
+                'code' => '026',
                 'name' => [
                     'en' => 'Axle / CV joint Service',
                     'ar' => 'خدمة أكسل / سي في',
@@ -274,7 +274,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 26,
             ],
             [
-                'code' => 'SVC-027',
+                'code' => '027',
                 'name' => [
                     'en' => 'Fuel Pump / Tank Service',
                     'ar' => 'خدمة مضخة البترول / خزان البترول',
@@ -284,7 +284,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 27,
             ],
             [
-                'code' => 'SVC-028',
+                'code' => '028',
                 'name' => [
                     'en' => 'Engine Gasket',
                     'ar' => 'خدمة جازكيت المكينة',
@@ -294,7 +294,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 28,
             ],
             [
-                'code' => 'SVC-029',
+                'code' => '029',
                 'name' => [
                     'en' => 'Manifold Service',
                     'ar' => 'خدمة دبة البيئة',
@@ -304,7 +304,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 29,
             ],
             [
-                'code' => 'SVC-030',
+                'code' => '030',
                 'name' => [
                     'en' => 'Catalytic Service',
                     'ar' => 'خدمة دبة البيئة',
@@ -314,7 +314,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 30,
             ],
             [
-                'code' => 'SVC-031',
+                'code' => '031',
                 'name' => [
                     'en' => 'Exhaust Gasket Service',
                     'ar' => 'خدمة جازكيت الاكزوز',
@@ -324,7 +324,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 31,
             ],
             [
-                'code' => 'SVC-032',
+                'code' => '032',
                 'name' => [
                     'en' => 'Bearing Installation',
                     'ar' => 'تركيب بيرنق',
@@ -334,7 +334,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 32,
             ],
             [
-                'code' => 'SVC-033',
+                'code' => '033',
                 'name' => [
                     'en' => 'Plug / Throttle / Coil Service',
                     'ar' => 'خدمة بواجي / ثروتل / كويلات',
@@ -344,7 +344,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 33,
             ],
             [
-                'code' => 'SVC-034',
+                'code' => '034',
                 'name' => [
                     'en' => 'Wheel Welding',
                     'ar' => 'تلحيم رنقات',
@@ -354,7 +354,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 34,
             ],
             [
-                'code' => 'SVC-035',
+                'code' => '035',
                 'name' => [
                     'en' => 'Worker outside Labor',
                     'ar' => 'رسوم شغل خارجي',
@@ -364,7 +364,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 35,
             ],
             [
-                'code' => 'SVC-036',
+                'code' => '036',
                 'name' => [
                     'en' => 'General Mechanical Labor',
                     'ar' => 'رسوم شغل ميكانيكي عام',
@@ -374,7 +374,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 36,
             ],
             [
-                'code' => 'SVC-037',
+                'code' => '037',
                 'name' => [
                     'en' => 'General Electrical Labor',
                     'ar' => 'رسوم شغل كهربائي عام',
@@ -384,7 +384,7 @@ class ServiceSeeder extends Seeder
                 'sort_order' => 37,
             ],
             [
-                'code' => 'SVC-038',
+                'code' => '038',
                 'name' => [
                     'en' => 'Others',
                     'ar' => 'خدمة أخرى',

@@ -4,33 +4,33 @@
       <AppSidebar />
     </template>
     <template #header>
-      <AppHeader title="Services" subtitle="Manage your garage services" />
+      <AppHeader title="Orders" subtitle="Manage your garage orders" />
     </template>
     <template #default>
       <div class="p-6 space-y-4">
         <!-- Page Header with Title and Actions -->
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-foreground">Services</h1>
-            <p class="text-sm text-muted-foreground mt-1">Manage and organize your garage services</p>
+            <h1 class="text-2xl font-bold text-foreground">Orders</h1>
+            <p class="text-sm text-muted-foreground mt-1">Manage and organize your garage orders</p>
           </div>
           <div class="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
                 <Button variant="outline" class="gap-2 h-10">
                   <HugeiconsIcon :name="Download01Icon" class="h-4 w-4 text-blue-600" />
-                  Import
+                  Export
                   <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem @click="handleImport('csv')">Import CSV</DropdownMenuItem>
-                <DropdownMenuItem @click="handleImport('excel')">Import Excel</DropdownMenuItem>
+                <DropdownMenuItem @click="handleExport('csv')">Export CSV</DropdownMenuItem>
+                <DropdownMenuItem @click="handleExport('excel')">Export Excel</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button class="gap-2 h-10" @click="handleCreate">
               <HugeiconsIcon :name="Add01Icon" class="h-4 w-4" />
-              Create Service
+              Create Order
             </Button>
           </div>
         </div>
@@ -46,7 +46,7 @@
                 />
                 <Input
                   v-model="searchQuery"
-                  placeholder="Search by code, name, or description..."
+                  placeholder="Search by order number, customer name, phone, or email..."
                   class="pl-10 h-10"
                   @update:modelValue="handleSearch"
                 />
@@ -61,21 +61,21 @@
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="handleFilterStatus('all')">
-                    All Services
+                    All Orders
                   </DropdownMenuItem>
-                  <DropdownMenuItem @click="handleFilterStatus(true)">
-                    Active Only
-                  </DropdownMenuItem>
-                  <DropdownMenuItem @click="handleFilterStatus(false)">
-                    Inactive Only
+                  <DropdownMenuItem
+                    v-for="status in statusOptions"
+                    :key="status.value"
+                    @click="handleFilterStatus(status.value)"
+                  >
+                    {{ status.label }}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div v-if="activeFilter !== 'all'" class="flex items-center gap-2">
+            <div v-if="activeStatusFilter !== 'all'" class="flex items-center gap-2">
               <Badge variant="secondary" class="gap-1">
-                <span v-if="activeFilter === true">Active</span>
-                <span v-else>Inactive</span>
+                <span>{{ getStatusLabel(activeStatusFilter) }}</span>
                 <button @click="handleFilterStatus('all')" class="ml-1 hover:text-foreground text-muted-foreground">
                   ×
                 </button>
@@ -87,7 +87,7 @@
         <!-- Table Card -->
         <DataTable
           :columns="columns"
-          :data="services.data"
+          :data="orders.data"
           :current-page="currentPage"
           :total-pages="totalPages"
           :total-items="totalItems"
@@ -100,34 +100,33 @@
           @page-size-change="handlePageSizeChange"
           @action="handleAction"
         >
-          <template #cell-code="{ value }">
-            <span class="font-mono text-sm text-muted-foreground">{{ value || '-' }}</span>
+          <template #cell-order_number="{ value }">
+            <span class="font-mono text-sm font-medium text-foreground">{{ value || '-' }}</span>
           </template>
-          <template #cell-name="{ value }">
-            <div class="flex flex-col">
-              <span class="text-foreground font-medium">{{ value?.en || value }}</span>
-              <span class="text-sm text-muted-foreground" dir="rtl">{{ value?.ar }}</span>
-            </div>
+          <template #cell-customer_name="{ value }">
+            <span class="text-foreground">{{ value || '-' }}</span>
           </template>
-          <template #cell-unit_price="{ value }">
-            <span class="text-foreground font-medium">QR {{ parseFloat(value || 0).toFixed(2) }}</span>
+          <template #cell-customer_phone="{ value }">
+            <span class="text-foreground">{{ value || '-' }}</span>
           </template>
-          <template #cell-unit="{ value }">
-            <Badge variant="secondary" class="text-xs">
-              {{ value || 'pcs' }}
+          <template #cell-status="{ value, row }">
+            <Badge
+              :variant="getStatusVariant(value)"
+              class="text-xs font-medium"
+            >
+              {{ row.status_label }}
             </Badge>
           </template>
-          <template #cell-is_active="{ value, row }">
-            <div class="flex items-center gap-2">
-              <Switch
-                :key="`switch-${row.id}-${value}`"
-                :checked="!!value"
-                @update:checked="(checked) => handleStatusChange(row.id, checked)"
-              />
-              <span class="text-sm text-muted-foreground">
-                {{ value ? 'Active' : 'Inactive' }}
-              </span>
-            </div>
+          <template #cell-order_date="{ value }">
+            <span class="text-foreground">{{ value ? formatDate(value) : '-' }}</span>
+          </template>
+          <template #cell-total_amount="{ value, row }">
+            <span class="text-foreground font-medium">{{ row.formatted_total_amount || `QR ${parseFloat(value || 0).toFixed(2)}` }}</span>
+          </template>
+          <template #cell-items_count="{ value }">
+            <Badge variant="secondary" class="text-xs">
+              {{ value || 0 }} items
+            </Badge>
           </template>
           <template #actions="{ row }">
             <DropdownMenu>
@@ -137,6 +136,7 @@
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="handleView(row)">View</DropdownMenuItem>
                 <DropdownMenuItem @click="handleEdit(row)">Edit</DropdownMenuItem>
                 <DropdownMenuItem @click="handleDelete(row)" class="text-red-600">Delete</DropdownMenuItem>
               </DropdownMenuContent>
@@ -149,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import { HugeiconsIcon } from '@hugeicons/vue';
@@ -169,11 +169,10 @@ import { Card } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Switch } from '@/Components/ui/switch';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 
 const props = defineProps({
-  services: {
+  orders: {
     type: Object,
     default: () => ({
       data: [],
@@ -187,15 +186,19 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  statusOptions: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const searchQuery = ref(props.filters.search || '');
-const activeFilter = ref(props.filters.is_active ?? 'all');
+const activeStatusFilter = ref(props.filters.status ?? 'all');
 
 // Debounced search function
 const debouncedSearch = useDebounceFn((value) => {
   router.get(
-    route('services.index'),
+    route('orders.index'),
     {
       ...props.filters,
       search: value,
@@ -209,29 +212,31 @@ const debouncedSearch = useDebounceFn((value) => {
 }, 300);
 
 const columns = [
-  { key: 'code', label: 'Code', sortable: true },
-  { key: 'name', label: 'Service Name', sortable: true },
-  { key: 'unit_price', label: 'Unit Price', sortable: true },
-  { key: 'unit', label: 'Unit', sortable: true },
-  { key: 'is_active', label: 'Status', sortable: true },
+  { key: 'order_number', label: 'Order Number', sortable: true },
+  { key: 'customer_name', label: 'Customer', sortable: true },
+  { key: 'customer_phone', label: 'Phone', sortable: false },
+  { key: 'status', label: 'Status', sortable: true },
+  { key: 'order_date', label: 'Order Date', sortable: true },
+  { key: 'total_amount', label: 'Total Amount', sortable: true },
+  { key: 'items_count', label: 'Items', sortable: false },
 ];
 
-const currentPage = computed(() => props.services.current_page || 1);
-const totalPages = computed(() => props.services.last_page || 1);
-const pageSize = computed(() => props.services.per_page || 15);
-const totalItems = computed(() => props.services.total || 0);
+const currentPage = computed(() => props.orders.current_page || 1);
+const totalPages = computed(() => props.orders.last_page || 1);
+const pageSize = computed(() => props.orders.per_page || 15);
+const totalItems = computed(() => props.orders.total || 0);
 
 const handleSearch = (value) => {
   debouncedSearch(value);
 };
 
 const handleFilterStatus = (status) => {
-  activeFilter.value = status;
+  activeStatusFilter.value = status;
   router.get(
-    route('services.index'),
+    route('orders.index'),
     {
       ...props.filters,
-      is_active: status === 'all' ? null : status,
+      status: status === 'all' ? null : status,
       page: 1,
     },
     {
@@ -243,7 +248,7 @@ const handleFilterStatus = (status) => {
 
 const handleSort = ({ column, direction }) => {
   router.get(
-    route('services.index'),
+    route('orders.index'),
     {
       ...props.filters,
       sort: column,
@@ -258,7 +263,7 @@ const handleSort = ({ column, direction }) => {
 
 const handlePageChange = (page) => {
   router.get(
-    route('services.index'),
+    route('orders.index'),
     {
       ...props.filters,
       page,
@@ -272,7 +277,7 @@ const handlePageChange = (page) => {
 
 const handlePageSizeChange = (size) => {
   router.get(
-    route('services.index'),
+    route('orders.index'),
     {
       ...props.filters,
       per_page: size,
@@ -294,16 +299,20 @@ const handleAction = ({ action, row }) => {
 };
 
 const handleCreate = () => {
-  router.visit(route('services.create'));
+  router.visit(route('orders.create'));
+};
+
+const handleView = (row) => {
+  router.visit(route('orders.show', row.id));
 };
 
 const handleEdit = (row) => {
-  router.visit(route('services.edit', row.id));
+  router.visit(route('orders.edit', row.id));
 };
 
 const handleDelete = (row) => {
-  if (confirm(`Are you sure you want to delete "${row.name?.en || row.name}"?`)) {
-    router.delete(route('services.destroy', row.id), {
+  if (confirm(`Are you sure you want to delete order "${row.order_number}"?`)) {
+    router.delete(route('orders.destroy', row.id), {
       preserveScroll: true,
       onSuccess: () => {
         // Success message will come from the controller
@@ -312,44 +321,37 @@ const handleDelete = (row) => {
   }
 };
 
-const handleImport = (type) => {
-  console.log(`Import ${type}`);
-  // Handle import logic
+const handleExport = (type) => {
+  console.log(`Export ${type}`);
+  // Handle export logic
 };
 
-const handleStatusChange = (serviceId, isActive) => {
-  const service = props.services.data.find(s => s.id === serviceId);
-  if (!service) return;
+const getStatusLabel = (status) => {
+  const statusOption = props.statusOptions.find(s => s.value === status);
+  return statusOption?.label || status;
+};
 
-  router.patch(
-    route('services.update', serviceId),
-    {
-      is_active: isActive,
-      // Include existing data to avoid validation errors
-      name: {
-        en: service.name?.en || '',
-        ar: service.name?.ar || '',
-      },
-      unit_price: service.unit_price || 0,
-      unit: service.unit || 'pcs',
-      sort_order: service.sort_order || 0,
-      code: service.code || null,
-    },
-    {
-      preserveScroll: true,
-      preserveState: true, // Preserve state to keep UI responsive
-      only: ['services'], // Only update services data
-      onSuccess: () => {
-        // Status updated successfully
-      },
-      onError: () => {
-        // Handle error - reload to get correct state
-        router.reload({ only: ['services'] });
-      },
-    }
-  );
+const getStatusVariant = (status) => {
+  const variants = {
+    'draft': 'secondary',
+    'pending': 'secondary',
+    'confirmed': 'default',
+    'cancelled': 'secondary',
+  };
+  return variants[status] || 'secondary';
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 };
 </script>
 
 <style scoped>
 </style>
+

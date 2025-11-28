@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-50 font-sans antialiased overflow-hidden">
+  <div class="flex fixed inset-0 h-screen bg-gray-50 font-sans antialiased overflow-hidden">
     <!-- Sidebar -->
     <slot name="sidebar"></slot>
 

@@ -197,7 +197,7 @@
             <Button
               variant="outline"
               size="icon"
-              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="h-8 w-8 border-border text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               :disabled="currentPage === 1"
               @click="handleFirstPage"
             >
@@ -207,7 +207,7 @@
             <Button
               variant="outline"
               size="icon"
-              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="h-8 w-8 border-border text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               :disabled="currentPage === 1"
               @click="handlePreviousPage"
             >
@@ -221,18 +221,18 @@
                   :variant="page === currentPage ? 'default' : 'outline'"
                   size="sm"
                   class="h-8 w-8"
-                  :class="page === currentPage ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border-gray-300 text-gray-700 hover:bg-gray-100'"
+                  :class="page === currentPage ? 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary' : 'border-border text-foreground hover:bg-accent hover:text-accent-foreground'"
                   @click="handlePageChange(page)"
                 >
                   {{ page }}
                 </Button>
-                <span v-else class="px-2 text-gray-500">...</span>
+                <span v-else class="px-2 text-muted-foreground">...</span>
               </template>
             </div>
             <Button
               variant="outline"
               size="icon"
-              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="h-8 w-8 border-border text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               :disabled="currentPage === totalPages"
               @click="handleNextPage"
             >
@@ -242,7 +242,7 @@
             <Button
               variant="outline"
               size="icon"
-              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="h-8 w-8 border-border text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               :disabled="currentPage === totalPages"
               @click="handleLastPage"
             >
