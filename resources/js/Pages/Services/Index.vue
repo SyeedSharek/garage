@@ -120,12 +120,12 @@
           <template #cell-is_active="{ value, row }">
             <div class="flex items-center gap-2">
               <Switch
-                :key="`switch-${row.id}-${value}`"
-                :checked="!!value"
+                :key="`switch-${row.id}-${optimisticStatus[row.id] ?? value}`"
+                :checked="Boolean(optimisticStatus[row.id] ?? value ?? false)"
                 @update:checked="(checked) => handleStatusChange(row.id, checked)"
               />
               <span class="text-sm text-muted-foreground">
-                {{ value ? 'Active' : 'Inactive' }}
+                {{ Boolean(optimisticStatus[row.id] ?? value ?? false) ? 'Active' : 'Inactive' }}
               </span>
             </div>
           </template>
@@ -191,6 +191,9 @@ const props = defineProps({
 
 const searchQuery = ref(props.filters.search || '');
 const activeFilter = ref(props.filters.is_active ?? 'all');
+
+// Track optimistic status updates
+const optimisticStatus = ref({});
 
 // Debounced search function
 const debouncedSearch = useDebounceFn((value) => {
@@ -321,10 +324,16 @@ const handleStatusChange = (serviceId, isActive) => {
   const service = props.services.data.find(s => s.id === serviceId);
   if (!service) return;
 
+  // Ensure boolean value
+  const newStatus = Boolean(isActive);
+
+  // Optimistically update the UI
+  optimisticStatus.value[serviceId] = newStatus;
+
   router.patch(
     route('services.update', serviceId),
     {
-      is_active: isActive,
+      is_active: newStatus,
       // Include existing data to avoid validation errors
       name: {
         en: service.name?.en || '',
@@ -337,14 +346,17 @@ const handleStatusChange = (serviceId, isActive) => {
     },
     {
       preserveScroll: true,
-      preserveState: true, // Preserve state to keep UI responsive
-      only: ['services'], // Only update services data
       onSuccess: () => {
-        // Status updated successfully
+        // Clear optimistic update
+        delete optimisticStatus.value[serviceId];
+        // Force reload to ensure data is updated after redirect
+        router.reload({ only: ['services'], preserveScroll: true });
       },
       onError: () => {
-        // Handle error - reload to get correct state
-        router.reload({ only: ['services'] });
+        // Revert optimistic update on error
+        delete optimisticStatus.value[serviceId];
+        // Reload to get correct state
+        router.reload({ only: ['services'], preserveScroll: true });
       },
     }
   );

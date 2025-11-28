@@ -48,7 +48,7 @@ class ServiceController extends Controller
                 ],
                 'unit_price' => $service->unit_price,
                 'unit' => $service->unit,
-                'is_active' => $service->is_active,
+                'is_active' => (bool) $service->is_active,
                 'sort_order' => $service->sort_order,
             ];
         });
@@ -136,7 +136,7 @@ class ServiceController extends Controller
                 ],
                 'unit_price' => $service->unit_price,
                 'unit' => $service->unit,
-                'is_active' => $service->is_active,
+                'is_active' => (bool) $service->is_active,
                 'sort_order' => $service->sort_order,
             ],
         ]);
