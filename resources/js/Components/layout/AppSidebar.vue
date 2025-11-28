@@ -87,12 +87,12 @@ const navItems = computed(() => [
     icon: ClipboardIcon,
     active: page.url.startsWith('/services'),
   },
-  {
-    name: 'Orders',
-    href: route('orders.index'),
-    icon: ShoppingBagIcon,
-    active: page.url.startsWith('/orders'),
-  },
+  // {
+  //   name: 'Orders',
+  //   href: route('orders.index'),
+  //   icon: ShoppingBagIcon,
+  //   active: page.url.startsWith('/orders'),
+  // },
   {
     name: 'Invoices',
     href: route('invoices.index'),

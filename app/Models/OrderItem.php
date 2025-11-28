@@ -15,7 +15,6 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'service_id',
-        'serial_number',
         'description',
         'part_number',
         'quantity',
@@ -31,7 +30,6 @@ class OrderItem extends Model
     public $translatable = ['description'];
 
     protected $casts = [
-        'serial_number' => 'integer',
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'amount' => 'decimal:2',
@@ -76,13 +74,6 @@ class OrderItem extends Model
     {
         static::saving(function ($orderItem) {
             $orderItem->amount = $orderItem->quantity * $orderItem->unit_price;
-
-            // Auto-increment serial number if not set
-            if (!$orderItem->serial_number) {
-                $maxSerial = OrderItem::where('order_id', $orderItem->order_id)
-                    ->max('serial_number') ?? 0;
-                $orderItem->serial_number = $maxSerial + 1;
-            }
 
             // Auto-populate from service if service_id exists
             if ($orderItem->service_id && !$orderItem->description) {

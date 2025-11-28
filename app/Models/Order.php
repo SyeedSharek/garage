@@ -40,7 +40,7 @@ class Order extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(OrderItem::class)->orderBy('serial_number');
+        return $this->hasMany(OrderItem::class)->orderBy('sort_order');
     }
 
     public function payments(): HasMany
@@ -203,5 +203,38 @@ class Order extends Model
     public function scopeForCustomer($query, $customerId)
     {
         return $query->where('customer_id', $customerId);
+    }
+
+    /**
+     * Create order with items, payments, and invoice in bulk
+     */
+    public static function createWithItems(array $orderData, array $itemsData, array $pricingData): self
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($orderData, $itemsData, $pricingData) {
+            // Create order
+            $order = static::create($orderData);
+
+            // Bulk insert items
+            if (!empty($itemsData)) {
+                \Illuminate\Support\Facades\DB::table('order_items')->insert($itemsData);
+            }
+
+            // Bulk insert payments
+            if (!empty($pricingData['payments'])) {
+                \Illuminate\Support\Facades\DB::table('order_payments')->insert($pricingData['payments']);
+            }
+
+            // Create invoice
+            if (isset($pricingData['invoice'])) {
+                $invoice = \App\Models\Invoice::create($pricingData['invoice']);
+
+                // Link payments to invoice
+                \Illuminate\Support\Facades\DB::table('order_payments')
+                    ->where('order_id', $order->id)
+                    ->update(['invoice_id' => $invoice->id]);
+            }
+
+            return $order->fresh();
+        });
     }
 }
