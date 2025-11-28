@@ -1,0 +1,49 @@
+{
+  "metrics": [
+    {
+      "id": "income",
+      "title": "New Net Income",
+      "value": "£8,245.00",
+      "trend": {
+        "value": -0.5,
+        "direction": "down",
+        "label": "from last week"
+      },
+      "icon": "DollarIcon",
+      "chart": {
+        "data": [75, 45, 100, 70, 85, 60, 95, 80],
+        "colors": ["#1e293b", "#93c5fd", "#1e293b", "#1e293b", "#1e293b", "#93c5fd", "#1e293b", "#1e293b"]
+      }
+    },
+    {
+      "id": "bookings",
+      "title": "Total Bookings",
+      "value": "256",
+      "trend": {
+        "value": 1.0,
+        "direction": "up",
+        "label": "from last week"
+      },
+      "icon": "ShoppingBagIcon",
+      "chart": {
+        "data": [70, 85, 100, 80, 90, 75, 95, 88],
+        "colors": ["#1e293b", "#1e293b", "#93c5fd", "#1e293b", "#1e293b", "#1e293b", "#93c5fd", "#1e293b"]
+      }
+    },
+    {
+      "id": "issues",
+      "title": "Resolved issues",
+      "value": "1,256",
+      "trend": {
+        "value": 1.0,
+        "direction": "up",
+        "label": "from last week"
+      },
+      "icon": "TagIcon",
+      "chart": {
+        "data": [60, 85, 100, 75, 90, 70, 95, 82],
+        "colors": ["#93c5fd", "#1e293b", "#1e293b", "#1e293b", "#1e293b", "#93c5fd", "#1e293b", "#1e293b"]
+      }
+    }
+  ]
+}

@@ -4,132 +4,183 @@
       <AppSidebar />
     </template>
     <template #header>
-      <AppHeader />
+      <AppHeader title="Dashboard" subtitle="Welcome back! Here's what's happening with your garage." />
     </template>
     <template #default>
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+      <div class="space-y-6">
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="metric in metrics"
+            :key="metric.id"
+            class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+          >
+            <div class="p-6">
+              <!-- Header with Icon and Menu -->
+              <div class="flex items-start justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                  <div class="relative flex-shrink-0">
+                    <!-- Larger fainter background circle -->
+                    <div class="absolute -top-1 -left-1 h-14 w-14 rounded-full bg-blue-200 opacity-40"></div>
+                    <!-- Main icon circle -->
+                    <div class="relative h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center z-10">
+                      <HugeiconsIcon :icon="iconMap[metric.icon]" :size="20" color="rgb(37 99 235)" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-medium text-gray-900 leading-tight">{{ metric.title }}</h3>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                  <div class="flex -space-x-2">
+                    <!-- First avatar -->
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white shadow-sm overflow-hidden">
+                      <div class="w-full h-full bg-blue-500"></div>
+                    </div>
+                    <!-- Second avatar -->
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 border-2 border-white relative shadow-sm overflow-hidden z-10">
+                      <div class="w-full h-full bg-pink-500"></div>
+                      <!-- 25+ badge -->
+                      <div class="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-20">
+                        <span class="text-[7px] text-white font-bold leading-none">25+</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="p-1 hover:bg-gray-100 rounded transition-colors">
+                    <HugeiconsIcon :icon="More03Icon" :size="16" color="rgb(17 24 39)" />
+                  </button>
+                </div>
+              </div>
 
-      <!-- Metric Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <template #icon>
-            <div class="p-3 bg-blue-100 rounded-full">
-              <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h6m-6 4h6m-6 4h6" />
-              </svg>
-            </div>
-          </template>
-          <template #title>Total Vehicles</template>
-          <template #default>150</template>
-        </Card>
-        <Card>
-          <template #icon>
-            <div class="p-3 bg-green-100 rounded-full">
-                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a3 3 0 00-3-3H9a3 3 0 00-3 3v1a6 6 0 006 6z" />
-                </svg>
-            </div>
-          </template>
-          <template #title>Total Customers</template>
-          <template #default>84</template>
-        </Card>
-        <Card>
-          <template #icon>
-             <div class="p-3 bg-yellow-100 rounded-full">
-                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-            </div>
-          </template>
-          <template #title>Active Services</template>
-          <template #default>23</template>
-        </Card>
-        <Card>
-          <template #icon>
-            <div class="p-3 bg-red-100 rounded-full">
-                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-            </div>
-          </template>
-          <template #title>Reports Generated</template>
-          <template #default>12</template>
-        </Card>
-      </div>
+              <!-- Value, Trend and Chart Section - Side by Side -->
+              <div class="flex items-end justify-between gap-4">
+                <!-- Left: Value and Trend -->
+                <div class="flex-1">
+                  <div class="mb-2">
+                    <p class="text-3xl font-bold text-gray-900 tracking-tight">{{ metric.value }}</p>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <div class="flex items-center text-blue-400">
+                      <HugeiconsIcon
+                        :icon="metric.trend.direction === 'up' ? ArrowUp01Icon : ArrowDown01Icon"
+                        :size="12"
+                        color="currentColor"
+                      />
+                      <span class="text-sm font-medium ml-1 text-gray-600">{{ Math.abs(metric.trend.value).toFixed(1).replace('.', ',') }}%</span>
+                    </div>
+                    <span class="text-sm text-gray-500">{{ metric.trend.label }}</span>
+                  </div>
+                </div>
 
-     <!-- Recent Services Table -->
-      <div class="mt-8 bg-white rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Recent Services</h2>
-          <Button @click="showCreateModal = true">Create Service</Button>
+                <!-- Right: Mini Bar Chart with ApexCharts -->
+                <div class="h-12 flex-1 max-w-32 flex-shrink-0">
+                  <VueApexCharts
+                    type="bar"
+                    height="48"
+                    :options="getChartOptionsForMetric(metric)"
+                    :series="getChartSeriesForMetric(metric)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <Table :headers="tableHeaders" :items="tableItems">
-          <template #actions="{ item }">
-            <a href="#" class="text-blue-500 hover:underline mr-4">View</a>
-            <a href="#" class="text-green-500 hover:underline">Edit</a>
-          </template>
-        </Table>
       </div>
-
-      <!-- Create Service Modal -->
-      <Modal :show="showCreateModal" @close="showCreateModal = false">
-        <template #header>
-            <h3 class="text-lg font-bold">Create New Service</h3>
-        </template>
-
-        <div class="space-y-4">
-            <FormInput v-model="newService.customerName" label="Customer Name" placeholder="e.g., John Doe" />
-            <FormInput v-model="newService.vehicleModel" label="Vehicle Model" placeholder="e.g., Toyota Camry" />
-            <FormInput v-model="newService.serviceDescription" label="Service Description" placeholder="e.g., Oil Change" />
-        </div>
-
-        <template #footer>
-          <Button variant="secondary" @click="showCreateModal = false" class="mr-2">Cancel</Button>
-          <Button @click="createService">Save</Button>
-        </template>
-      </Modal>
     </template>
   </MainLayout>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
 import AppHeader from '@/Components/layout/AppHeader.vue';
-import Card from '@/Components/ui/Card.vue';
-import Table from '@/Components/ui/Table.vue';
-import Modal from '@/Components/ui/Modal.vue';
-import Button from '@/Components/ui/Button.vue';
-import FormInput from '@/Components/ui/FormInput.vue';
-import { ref } from 'vue';
+import { HugeiconsIcon } from '@hugeicons/vue';
+import {
+  DollarIcon,
+  ShoppingBagIcon,
+  TagIcon,
+  ArrowUp01Icon,
+  ArrowDown01Icon,
+  More03Icon,
+} from '@hugeicons/core-free-icons';
+import VueApexCharts from 'vue3-apexcharts';
+import dashboardData from '@/data/dashboardData.json';
 
-const showCreateModal = ref(false);
+// Icon mapping
+const iconMap = {
+  DollarIcon,
+  ShoppingBagIcon,
+  TagIcon,
+};
 
-// Sample data for the table
-const tableHeaders = ref([
-  { text: 'Customer', value: 'customer' },
-  { text: 'Vehicle', value: 'vehicle' },
-  { text: 'Service', value: 'service' },
-  { text: 'Status', value: 'status' },
-]);
+// Get metrics from JSON data
+const metrics = ref(dashboardData.metrics);
 
-const tableItems = ref([
-  { id: 1, customer: 'John Doe', vehicle: 'Toyota Camry', service: 'Oil Change', status: 'Completed' },
-  { id: 2, customer: 'Jane Smith', vehicle: 'Honda Civic', service: 'Tire Rotation', status: 'In Progress' },
-  { id: 3, customer: 'Sam Wilson', vehicle: 'Ford F-150', service: 'Brake Inspection', status: 'Pending' },
-]);
-
-const newService = ref({
-    customerName: '',
-    vehicleModel: '',
-    serviceDescription: ''
+// Base chart options function
+const getChartOptions = (colors, dataLength) => ({
+  chart: {
+    type: 'bar',
+    height: 48,
+    toolbar: { show: false },
+    sparkline: { enabled: false },
+    animations: { enabled: false },
+  },
+  plotOptions: {
+    bar: {
+      borderRadius: 4,
+      borderRadiusApplication: 'end',
+      columnWidth: dataLength > 4 ? '10%' : '18%',
+      distributed: true,
+      horizontal: false,
+      dataLabels: {
+        position: 'top',
+      },
+    },
+  },
+  dataLabels: { enabled: false },
+  grid: {
+    show: false,
+    padding: { left: 0, right: 0, top: 0, bottom: 0 },
+  },
+  xaxis: {
+    labels: { show: false },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    categories: Array(dataLength).fill(''),
+  },
+  yaxis: {
+    show: false,
+    min: 0,
+    max: 100,
+  },
+  colors: colors,
+  tooltip: { enabled: false },
+  legend: { show: false },
+  fill: {
+    opacity: 1,
+  },
+  stroke: {
+    show: false,
+  },
 });
 
-const createService = () => {
-    // Logic to save the new service would go here
-    console.log('Saving new service:', newService.value);
-    showCreateModal.value = false;
-    // Optionally, reset form
-    newService.value = { customerName: '', vehicleModel: '', serviceDescription: '' };
+// Get chart options for each metric
+const getChartOptionsForMetric = (metric) => {
+  return getChartOptions(metric.chart.colors, metric.chart.data.length);
+};
+
+// Get chart series for each metric
+const getChartSeriesForMetric = (metric) => {
+  return [
+    {
+      name: metric.title,
+      data: metric.chart.data,
+    },
+  ];
 };
 </script>
+
+<style scoped>
+/* Pixel perfect adjustments */
+</style>
