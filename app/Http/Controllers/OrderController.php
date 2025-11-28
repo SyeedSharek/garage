@@ -84,7 +84,26 @@ class OrderController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Orders/Create');
+        $services = \App\Models\Service::active()
+            ->ordered()
+            ->get()
+            ->map(function ($service) {
+                return [
+                    'id' => $service->id,
+                    'code' => $service->code,
+                    'name' => [
+                        'en' => $service->getNameEn(),
+                        'ar' => $service->getNameAr(),
+                    ],
+                    'unit_price' => $service->unit_price,
+                    'unit' => $service->unit,
+                    'formatted_price' => $service->formatted_price,
+                ];
+            });
+
+        return Inertia::render('Orders/Create', [
+            'services' => $services,
+        ]);
     }
 
     /**
