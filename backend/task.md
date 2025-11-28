@@ -1,15 +1,42 @@
-Design a modern web dashboard UI with a clean and professional look. The dashboard should include:
+Create a fully responsive, modern, attractive landing page for a Garage Management System website.
 
-1. A collapsible sidebar with navigation links for different modules (Vehicles, Customers, Services, Reports).
-2. A top header/navbar that includes a logo, search bar, notifications icon, and user profile menu.
-3. A responsive main content area with:
-   - Cards showing key metrics (e.g., total vehicles, total customers, active services)
-   - Tables for listing items with actions like edit, delete, view
-   - Centralized forms that can be reused across the dashboard for creating and editing entities
-4. Use a consistent color palette, modern typography, and Material Design principles (Vuetify style)
-5. Include interactive UI elements like buttons, modals, dropdowns, and input fields
-6. The layout should be modular so components like sidebar, header, navbar, and forms can be reused in different pages
-7. Ensure the design is suitable for desktop and tablet screens
-8. Provide a clean, visually appealing, and professional look for a Garage Management System dashboard
+Purpose: This is a marketing/branding page only — users cannot buy anything.
 
-Output format: UI layout mockup / dashboard design with sidebar, header, navbar, cards, tables, and reusable forms.
+Requirements:
+
+Clean, sleek, modern UI/UX
+Fully responsive for desktop, tablet, and mobile
+Use a modern color palette (dark + neon accent or clean white + blue)
+Include smooth animations (fade-in, slide, hover effects)
+Use modern typography
+Include iconography and illustrations where needed
+
+Sections Needed:
+
+Hero Section
+Big heading: “Professional Garage Management System”
+Subheading describing features
+Background image related to automotive or garage service
+Button: “Learn More”
+Features Section
+Garage dashboard management
+Customer tracking
+Vehicle histories
+Inventory tracking
+Appointment scheduling
+About the Garage
+Who we are
+Services we offer
+Location Section
+Show the physical garage location on embedded map
+Text address + operating hours
+Testimonials Section
+3–4 customer review cards
+Call to Action
+
+“Visit Our Garage Today”
+Footer
+
+Social media links
+Contact information
+Make the design visually stunning, modern, smooth, and professional.

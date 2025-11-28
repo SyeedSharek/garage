@@ -3,7 +3,7 @@
     <!-- Logo and Search -->
     <div class="flex items-center space-x-4">
       <div class="text-2xl font-bold text-gray-800">
-        GARAGE
+        SHAHBAZ AUTO SERVICE & TRADING
       </div>
       <div class="relative hidden md:block">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3">

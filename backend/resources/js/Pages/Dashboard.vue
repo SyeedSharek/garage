@@ -7,7 +7,8 @@
       <AppHeader />
     </template>
     <template #default>
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard </h1>
+
 
       <!-- Metric Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
