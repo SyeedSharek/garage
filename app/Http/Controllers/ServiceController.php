@@ -37,6 +37,22 @@ class ServiceController extends Controller
         // Order by sort_order, then by name
         $services = $query->ordered()->paginate(15);
 
+        // Transform services data for frontend
+        $services->getCollection()->transform(function ($service) {
+            return [
+                'id' => $service->id,
+                'code' => $service->code,
+                'name' => [
+                    'en' => $service->getNameEn(),
+                    'ar' => $service->getNameAr(),
+                ],
+                'unit_price' => $service->unit_price,
+                'unit' => $service->unit,
+                'is_active' => $service->is_active,
+                'sort_order' => $service->sort_order,
+            ];
+        });
+
         return Inertia::render('Services/Index', [
             'services' => $services,
             'filters' => $request->only(['search', 'is_active']),

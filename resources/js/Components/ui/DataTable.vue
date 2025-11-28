@@ -1,7 +1,7 @@
 <template>
   <div class="w-full space-y-4">
     <!-- Tabs -->
-    <div v-if="tabs && tabs.length > 0" class="flex items-center justify-between border-b border-gray-200">
+    <div v-if="tabs && tabs.length > 0" class="flex items-center justify-between border-b border-border">
       <div class="flex items-center gap-1">
         <button
           v-for="tab in tabs"
@@ -11,24 +11,26 @@
               'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
               activeTab === tab.key
                 ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             )
           "
           @click="handleTabChange(tab.key)"
         >
           {{ tab.label }}
-          <span v-if="tab.count" class="ml-1 text-gray-400">({{ tab.count }})</span>
+          <span v-if="tab.count" class="ml-1 text-muted-foreground">({{ tab.count }})</span>
         </button>
       </div>
       <div class="flex items-center gap-3">
-        <DropdownMenu align="right">
-          <template #trigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
             <Button variant="outline" class="gap-2 h-9">
               Customize Columns
               <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
             </Button>
-          </template>
-          <DropdownMenuItem @click="handleCustomizeColumns">Column Settings</DropdownMenuItem>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @click="handleCustomizeColumns">Column Settings</DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
         <Button class="gap-2 h-9">
           <HugeiconsIcon :name="Add01Icon" class="h-4 w-4" />
@@ -40,21 +42,21 @@
     <!-- Table -->
     <Card class="w-full p-0">
       <div class="p-4 pb-0">
-        <div class="rounded-md border border-gray-200 bg-white overflow-hidden">
+        <div class="rounded-md border border-border bg-background overflow-hidden">
           <Table>
-            <TableHeaderShadcn>
-              <TableRow class="border-b border-gray-200 hover:bg-transparent bg-gray-50/30">
+            <TableHeader>
+              <TableRow class="border-b border-border hover:bg-transparent bg-muted/30">
                 <TableHead v-if="selectable || draggable" class="w-12 h-12">
                   <div class="flex items-center gap-2">
                     <HugeiconsIcon
                       v-if="draggable"
                       :name="Menu01Icon"
-                      class="h-4 w-4 text-gray-400 cursor-move"
+                      class="h-4 w-4 text-muted-foreground cursor-move"
                     />
                     <input
                       v-if="selectable"
                       type="checkbox"
-                      class="h-4 w-4 cursor-pointer border-gray-300 rounded text-primary focus:ring-primary"
+                      class="h-4 w-4 cursor-pointer border-input rounded text-primary focus:ring-primary"
                       :checked="allSelected"
                       @change="handleSelectAll"
                     />
@@ -65,12 +67,12 @@
                   :key="column.key"
                   :class="cn(
                     'h-12',
-                    sortable && (column.sortable !== false) && 'cursor-pointer hover:bg-gray-100/50'
+                    sortable && (column.sortable !== false) && 'cursor-pointer hover:bg-muted/50'
                   )"
                   @click="sortable && (column.sortable !== false) && handleSort(column.key)"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="font-medium text-gray-900">{{ column.label }}</span>
+                    <span class="font-medium text-foreground">{{ column.label }}</span>
                     <div v-if="sortable && (column.sortable !== false)" class="flex flex-col -space-y-1">
                       <HugeiconsIcon
                         :name="ArrowUp01Icon"
@@ -78,8 +80,8 @@
                           cn(
                             'h-3 w-3',
                             sortColumn === column.key && sortDirection === 'asc'
-                              ? 'text-gray-900'
-                              : 'text-gray-400'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
                           )
                         "
                       />
@@ -89,8 +91,8 @@
                           cn(
                             'h-3 w-3',
                             sortColumn === column.key && sortDirection === 'desc'
-                              ? 'text-gray-900'
-                              : 'text-gray-400'
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
                           )
                         "
                       />
@@ -99,24 +101,24 @@
                 </TableHead>
                 <TableHead v-if="showActions" class="w-12 h-12"></TableHead>
               </TableRow>
-            </TableHeaderShadcn>
+            </TableHeader>
             <TableBody>
               <TableRow
                 v-for="(row, index) in data"
                 :key="getRowKey(row, index)"
-                class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                class="border-b border-border hover:bg-muted/50 transition-colors"
               >
                 <TableCell v-if="selectable || draggable" class="h-16">
                   <div class="flex items-center gap-2">
                     <HugeiconsIcon
                       v-if="draggable"
                       :name="Menu01Icon"
-                      class="h-4 w-4 text-gray-400 cursor-move"
+                      class="h-4 w-4 text-muted-foreground cursor-move"
                     />
                     <input
                       v-if="selectable"
                       type="checkbox"
-                      class="h-4 w-4 cursor-pointer border-gray-300 rounded text-primary focus:ring-primary"
+                      class="h-4 w-4 cursor-pointer border-input rounded text-primary focus:ring-primary"
                       :checked="isRowSelected(getRowKey(row, index))"
                       @change="handleRowSelect(getRowKey(row, index))"
                     />
@@ -139,14 +141,16 @@
                 </TableCell>
                 <TableCell v-if="showActions" class="h-16">
                   <slot name="actions" :row="row" :index="index">
-                    <DropdownMenu align="right">
-                      <template #trigger>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger as-child>
                         <Button variant="ghost" size="icon" class="h-8 w-8 hover:bg-gray-100">
                           <HugeiconsIcon :name="Menu01Icon" class="h-4 w-4 text-gray-600" />
                         </Button>
-                      </template>
-                      <DropdownMenuItem @click="handleAction('edit', row)">Edit</DropdownMenuItem>
-                      <DropdownMenuItem @click="handleAction('delete', row)">Delete</DropdownMenuItem>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem @click="handleAction('edit', row)">Edit</DropdownMenuItem>
+                        <DropdownMenuItem @click="handleAction('delete', row)">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
                     </DropdownMenu>
                   </slot>
                 </TableCell>
@@ -164,57 +168,88 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="showPagination" class="flex items-center justify-between pt-4 border-t border-gray-200 px-4 pb-4">
-        <div class="text-sm text-gray-700">
-          <span>{{ selectedRows.length }} of {{ totalItems }} row(s) selected.</span>
+      <div v-if="showPagination" class="flex items-center justify-between px-6 py-4 border-t border-border bg-background">
+        <div class="flex-1 text-sm text-gray-600 dark:text-gray-400">
+          {{ selectedRows.length }} of {{ totalItems }} row(s) selected.
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-700">Rows per page</span>
-          <Select
-            v-model="localPageSize"
-            :options="computedPageSizeOptions"
-            class="w-[80px]"
-            @update:modelValue="handlePageSizeChange"
-          />
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
-          <Button
-            variant="outline"
-            size="icon"
-            class="h-9 w-9"
-            :disabled="currentPage === 1"
-            @click="handleFirstPage"
-          >
-            <HugeiconsIcon :name="ArrowLeftDoubleIcon" class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            class="h-9 w-9"
-            :disabled="currentPage === 1"
-            @click="handlePreviousPage"
-          >
-            <HugeiconsIcon :name="ArrowLeft01Icon" class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            class="h-9 w-9"
-            :disabled="currentPage === totalPages"
-            @click="handleNextPage"
-          >
-            <HugeiconsIcon :name="ArrowRight01Icon" class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            class="h-9 w-9"
-            :disabled="currentPage === totalPages"
-            @click="handleLastPage"
-          >
-            <HugeiconsIcon :name="ArrowRightDoubleIcon" class="h-4 w-4" />
-          </Button>
+        <div class="flex items-center space-x-6 lg:space-x-8">
+          <div class="flex items-center space-x-2">
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Rows per page</p>
+            <Select
+              v-model="localPageSize"
+              @update:modelValue="handlePageSizeChange"
+            >
+              <SelectTrigger class="h-8 w-[70px]">
+                <SelectValue :placeholder="localPageSize.toString()" />
+              </SelectTrigger>
+              <SelectContent side="top">
+                <SelectItem
+                  v-for="option in computedPageSizeOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="currentPage === 1"
+              @click="handleFirstPage"
+            >
+              <span class="sr-only">Go to first page</span>
+              <HugeiconsIcon :name="ArrowLeftDoubleIcon" class="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="currentPage === 1"
+              @click="handlePreviousPage"
+            >
+              <span class="sr-only">Go to previous page</span>
+              <HugeiconsIcon :name="ArrowLeft01Icon" class="h-4 w-4" />
+            </Button>
+            <div class="flex items-center space-x-1">
+              <template v-for="page in getVisiblePages()" :key="page">
+                <Button
+                  v-if="page !== '...'"
+                  :variant="page === currentPage ? 'default' : 'outline'"
+                  size="sm"
+                  class="h-8 w-8"
+                  :class="page === currentPage ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border-gray-300 text-gray-700 hover:bg-gray-100'"
+                  @click="handlePageChange(page)"
+                >
+                  {{ page }}
+                </Button>
+                <span v-else class="px-2 text-gray-500">...</span>
+              </template>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="currentPage === totalPages"
+              @click="handleNextPage"
+            >
+              <span class="sr-only">Go to next page</span>
+              <HugeiconsIcon :name="ArrowRight01Icon" class="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="currentPage === totalPages"
+              @click="handleLastPage"
+            >
+              <span class="sr-only">Go to last page</span>
+              <HugeiconsIcon :name="ArrowRightDoubleIcon" class="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -235,17 +270,11 @@ import {
   Menu01Icon,
   Add01Icon,
 } from '@hugeicons/core-free-icons';
-import Table from '@/Components/ui/shadcn/Table.vue';
-import TableHeaderShadcn from '@/Components/ui/shadcn/TableHeader.vue';
-import TableBody from '@/Components/ui/shadcn/TableBody.vue';
-import TableRow from '@/Components/ui/shadcn/TableRow.vue';
-import TableHead from '@/Components/ui/shadcn/TableHead.vue';
-import TableCell from '@/Components/ui/shadcn/TableCell.vue';
-import Card from '@/Components/ui/shadcn/Card.vue';
-import Button from '@/Components/ui/shadcn/Button.vue';
-import Select from '@/Components/ui/shadcn/Select.vue';
-import DropdownMenu from '@/Components/ui/shadcn/DropdownMenu.vue';
-import DropdownMenuItem from '@/Components/ui/shadcn/DropdownMenuItem.vue';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/Components/ui/table';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/Components/ui/select';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 
 const props = defineProps({
   columns: {
@@ -347,6 +376,47 @@ const computedPageSizeOptions = computed(() => {
     value: size,
   }));
 });
+
+const getVisiblePages = () => {
+  const pages = [];
+  const total = props.totalPages;
+  const current = props.currentPage;
+
+  if (total <= 7) {
+    // Show all pages if 7 or fewer
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show first page, last page, current page, and pages around current
+    if (current <= 3) {
+      // Near the start
+      for (let i = 1; i <= 5; i++) {
+        pages.push(i);
+      }
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 2) {
+      // Near the end
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      // In the middle
+      pages.push(1);
+      pages.push('...');
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push(i);
+      }
+      pages.push('...');
+      pages.push(total);
+    }
+  }
+
+  return pages;
+};
 
 const getRowKey = (row, index) => {
   return row[props.rowKey] ?? index;

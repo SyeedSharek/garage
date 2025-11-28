@@ -6,23 +6,36 @@
         <div class="flex items-center gap-4">
           <Select
             v-model="localSelectedFilter"
-            :options="filterOptions"
-            placeholder="All Orders"
             class="w-[180px]"
             @update:modelValue="handleFilterChange"
-          />
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All Orders" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="option in filterOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="flex items-center gap-3">
-          <DropdownMenu align="right">
-            <template #trigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
               <Button variant="outline" class="gap-2 h-10">
                 <HugeiconsIcon :name="Download01Icon" class="h-4 w-4 text-blue-600" />
                 Import
                 <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
               </Button>
-            </template>
-            <DropdownMenuItem @click="handleImport">Import CSV</DropdownMenuItem>
-            <DropdownMenuItem @click="handleImport">Import Excel</DropdownMenuItem>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="handleImport">Import CSV</DropdownMenuItem>
+              <DropdownMenuItem @click="handleImport">Import Excel</DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="outline" class="gap-2 h-10">
             <HugeiconsIcon :name="AiMail01Icon" class="h-4 w-4" />
@@ -64,12 +77,11 @@ import {
   Download01Icon,
   AiMail01Icon,
 } from '@hugeicons/core-free-icons';
-import Card from '@/Components/ui/shadcn/Card.vue';
-import Button from '@/Components/ui/shadcn/Button.vue';
-import Input from '@/Components/ui/shadcn/Input.vue';
-import Select from '@/Components/ui/shadcn/Select.vue';
-import DropdownMenu from '@/Components/ui/shadcn/DropdownMenu.vue';
-import DropdownMenuItem from '@/Components/ui/shadcn/DropdownMenuItem.vue';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/Components/ui/select';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 
 const props = defineProps({
   searchQuery: {

@@ -7,49 +7,137 @@
       <AppHeader title="Services" subtitle="Manage your garage services" />
     </template>
     <template #default>
-      <div class="p-6">
+      <div class="p-6 space-y-4">
+        <!-- Page Header with Title and Actions -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-foreground">Services</h1>
+            <p class="text-sm text-muted-foreground mt-1">Manage and organize your garage services</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button variant="outline" class="gap-2 h-10">
+                  <HugeiconsIcon :name="Download01Icon" class="h-4 w-4 text-blue-600" />
+                  Import
+                  <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="handleImport('csv')">Import CSV</DropdownMenuItem>
+                <DropdownMenuItem @click="handleImport('excel')">Import Excel</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button class="gap-2 h-10" @click="handleCreate">
+              <HugeiconsIcon :name="Add01Icon" class="h-4 w-4" />
+              Create Service
+            </Button>
+          </div>
+        </div>
+
+        <!-- Search and Filters Card -->
+        <Card class="w-full">
+          <div class="p-4 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="relative flex-1">
+                <HugeiconsIcon
+                  :name="Search01Icon"
+                  class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                />
+                <Input
+                  v-model="searchQuery"
+                  placeholder="Search by code, name, or description..."
+                  class="pl-10 h-10"
+                  @update:modelValue="handleSearch"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button variant="outline" class="gap-2 h-10">
+                    <HugeiconsIcon :name="FilterHorizontalIcon" class="h-4 w-4" />
+                    Filters
+                    <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem @click="handleFilterStatus('all')">
+                    All Services
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="handleFilterStatus(true)">
+                    Active Only
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="handleFilterStatus(false)">
+                    Inactive Only
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div v-if="activeFilter !== 'all'" class="flex items-center gap-2">
+              <Badge variant="secondary" class="gap-1">
+                <span v-if="activeFilter === true">Active</span>
+                <span v-else>Inactive</span>
+                <button @click="handleFilterStatus('all')" class="ml-1 hover:text-foreground text-muted-foreground">
+                  ×
+                </button>
+              </Badge>
+            </div>
+          </div>
+        </Card>
+
+        <!-- Table Card -->
         <DataTable
           :columns="columns"
-          :data="tableData"
-          :tabs="tabs"
-          :active-tab="activeTab"
+          :data="services.data"
           :current-page="currentPage"
           :total-pages="totalPages"
           :total-items="totalItems"
           :initial-page-size="pageSize"
-          @tab-change="handleTabChange"
+          :selectable="false"
+          :draggable="false"
+          :tabs="[]"
+          :show-header="false"
           @sort="handleSort"
           @page-change="handlePageChange"
           @page-size-change="handlePageSizeChange"
           @action="handleAction"
-          @add-section="handleAddSection"
         >
-          <template #cell-status="{ value }">
-            <div class="flex items-center gap-2">
-              <div
-                v-if="value === 'Done'"
-                class="flex h-5 w-5 items-center justify-center rounded-full bg-green-100"
-              >
-                <HugeiconsIcon :name="CheckmarkCircle01Icon" class="h-3 w-3 text-green-600" />
-              </div>
-              <div
-                v-else-if="value === 'In Process'"
-                class="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100"
-              >
-                <div class="h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-              </div>
-              <span class="text-sm text-gray-900">{{ value }}</span>
+          <template #cell-code="{ value }">
+            <span class="font-mono text-sm text-muted-foreground">{{ value || '-' }}</span>
+          </template>
+          <template #cell-name="{ value }">
+            <div class="flex flex-col">
+              <span class="text-foreground font-medium">{{ value?.en || value }}</span>
+              <span class="text-sm text-muted-foreground" dir="rtl">{{ value?.ar }}</span>
             </div>
           </template>
-          <template #cell-reviewer="{ value, row }">
-            <Select
-              v-if="value === 'Assign reviewer'"
-              :model-value="value"
-              :options="reviewerOptions"
-              class="w-[160px]"
-              placeholder="Assign reviewer"
-            />
-            <span v-else class="text-gray-900">{{ value }}</span>
+          <template #cell-unit_price="{ value }">
+            <span class="text-foreground font-medium">£{{ parseFloat(value || 0).toFixed(2) }}</span>
+          </template>
+          <template #cell-unit="{ value }">
+            <Badge variant="secondary" class="text-xs">
+              {{ value || 'pcs' }}
+            </Badge>
+          </template>
+          <template #cell-is_active="{ value }">
+            <Badge
+              :variant="value ? 'default' : 'secondary'"
+              class="text-xs font-medium"
+            >
+              {{ value ? 'Active' : 'Inactive' }}
+            </Badge>
+          </template>
+          <template #actions="{ row }">
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button variant="ghost" size="icon" class="h-8 w-8 hover:bg-gray-100">
+                  <HugeiconsIcon :name="Menu01Icon" class="h-4 w-4 text-gray-600" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="handleEdit(row)">Edit</DropdownMenuItem>
+                <DropdownMenuItem @click="handleDelete(row)" class="text-red-600">Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </template>
         </DataTable>
       </div>
@@ -58,15 +146,27 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useDebounceFn } from '@vueuse/core';
 import { HugeiconsIcon } from '@hugeicons/vue';
-import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
+import {
+  Menu01Icon,
+  Add01Icon,
+  Download01Icon,
+  ArrowDown01Icon,
+  Search01Icon,
+  FilterHorizontalIcon,
+} from '@hugeicons/core-free-icons';
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
 import AppHeader from '@/Components/layout/AppHeader.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
-import Select from '@/Components/ui/shadcn/Select.vue';
+import { Card } from '@/Components/ui/card';
+import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 
 const props = defineProps({
   services: {
@@ -75,7 +175,7 @@ const props = defineProps({
       data: [],
       current_page: 1,
       last_page: 1,
-      per_page: 10,
+      per_page: 15,
       total: 0,
     }),
   },
@@ -85,137 +185,66 @@ const props = defineProps({
   },
 });
 
-const activeTab = ref('outline');
+const searchQuery = ref(props.filters.search || '');
+const activeFilter = ref(props.filters.is_active ?? 'all');
 
-const tabs = [
-  { key: 'outline', label: 'Outline' },
-  { key: 'past-performance', label: 'Past Performance', count: 3 },
-  { key: 'key-personnel', label: 'Key Personnel', count: 2 },
-  { key: 'focus-documents', label: 'Focus Documents' },
-];
+// Debounced search function
+const debouncedSearch = useDebounceFn((value) => {
+  router.get(
+    route('services.index'),
+    {
+      ...props.filters,
+      search: value,
+      page: 1,
+    },
+    {
+      preserveState: true,
+      preserveScroll: true,
+    }
+  );
+}, 300);
 
 const columns = [
-  { key: 'header', label: 'Header', sortable: true },
-  { key: 'section_type', label: 'Section Type', sortable: true },
-  { key: 'status', label: 'Status', sortable: true },
-  { key: 'target', label: 'Target', sortable: true },
-  { key: 'limit', label: 'Limit', sortable: true },
-  { key: 'reviewer', label: 'Reviewer', sortable: false },
-];
-
-const tableData = ref([
-  {
-    id: 1,
-    header: 'Cover page',
-    section_type: 'Cover page',
-    status: 'In Process',
-    target: 18,
-    limit: 5,
-    reviewer: 'Eddie Lake',
-  },
-  {
-    id: 2,
-    header: 'Table of contents',
-    section_type: 'Table of contents',
-    status: 'Done',
-    target: 29,
-    limit: 24,
-    reviewer: 'Eddie Lake',
-  },
-  {
-    id: 3,
-    header: 'Executive summary',
-    section_type: 'Narrative',
-    status: 'Done',
-    target: 10,
-    limit: 13,
-    reviewer: 'Eddie Lake',
-  },
-  {
-    id: 4,
-    header: 'Technical approach',
-    section_type: 'Narrative',
-    status: 'Done',
-    target: 27,
-    limit: 23,
-    reviewer: 'Jamik Tashpulatov',
-  },
-  {
-    id: 5,
-    header: 'Design',
-    section_type: 'Narrative',
-    status: 'In Process',
-    target: 2,
-    limit: 16,
-    reviewer: 'Jamik Tashpulatov',
-  },
-  {
-    id: 6,
-    header: 'Capabilities',
-    section_type: 'Narrative',
-    status: 'In Process',
-    target: 20,
-    limit: 8,
-    reviewer: 'Jamik Tashpulatov',
-  },
-  {
-    id: 7,
-    header: 'Integration with existing systems',
-    section_type: 'Narrative',
-    status: 'In Process',
-    target: 19,
-    limit: 21,
-    reviewer: 'Jamik Tashpulatov',
-  },
-  {
-    id: 8,
-    header: 'Innovation and Advantages',
-    section_type: 'Narrative',
-    status: 'Done',
-    target: 25,
-    limit: 26,
-    reviewer: 'Assign reviewer',
-  },
-  {
-    id: 9,
-    header: "Overview of EMR's Innovative Solutions",
-    section_type: 'Technical content',
-    status: 'Done',
-    target: 7,
-    limit: 23,
-    reviewer: 'Assign reviewer',
-  },
-  {
-    id: 10,
-    header: 'Advanced Algorithms and Machine Learning',
-    section_type: 'Narrative',
-    status: 'Done',
-    target: 30,
-    limit: 28,
-    reviewer: 'Assign reviewer',
-  },
-]);
-
-const reviewerOptions = [
-  { label: 'Eddie Lake', value: 'Eddie Lake' },
-  { label: 'Jamik Tashpulatov', value: 'Jamik Tashpulatov' },
-  { label: 'Assign reviewer', value: 'Assign reviewer' },
+  { key: 'code', label: 'Code', sortable: true },
+  { key: 'name', label: 'Service Name', sortable: true },
+  { key: 'unit_price', label: 'Unit Price', sortable: true },
+  { key: 'unit', label: 'Unit', sortable: true },
+  { key: 'is_active', label: 'Status', sortable: true },
 ];
 
 const currentPage = computed(() => props.services.current_page || 1);
-const totalPages = computed(() => props.services.last_page || 7);
-const pageSize = computed(() => props.services.per_page || 10);
-const totalItems = computed(() => props.services.total || 68);
+const totalPages = computed(() => props.services.last_page || 1);
+const pageSize = computed(() => props.services.per_page || 15);
+const totalItems = computed(() => props.services.total || 0);
 
-const handleTabChange = (tabKey) => {
-  activeTab.value = tabKey;
-  // Handle tab change logic
+const handleSearch = (value) => {
+  debouncedSearch(value);
+};
+
+const handleFilterStatus = (status) => {
+  activeFilter.value = status;
+  router.get(
+    route('services.index'),
+    {
+      ...props.filters,
+      is_active: status === 'all' ? null : status,
+      page: 1,
+    },
+    {
+      preserveState: true,
+      preserveScroll: true,
+    }
+  );
 };
 
 const handleSort = ({ column, direction }) => {
   router.get(
     route('services.index'),
-    { sort: column, direction },
+    {
+      ...props.filters,
+      sort: column,
+      direction,
+    },
     {
       preserveState: true,
       preserveScroll: true,
@@ -226,7 +255,10 @@ const handleSort = ({ column, direction }) => {
 const handlePageChange = (page) => {
   router.get(
     route('services.index'),
-    { page },
+    {
+      ...props.filters,
+      page,
+    },
     {
       preserveState: true,
       preserveScroll: true,
@@ -237,7 +269,11 @@ const handlePageChange = (page) => {
 const handlePageSizeChange = (size) => {
   router.get(
     route('services.index'),
-    { per_page: size, page: 1 },
+    {
+      ...props.filters,
+      per_page: size,
+      page: 1,
+    },
     {
       preserveState: true,
       preserveScroll: true,
@@ -246,13 +282,35 @@ const handlePageSizeChange = (size) => {
 };
 
 const handleAction = ({ action, row }) => {
-  console.log(action, row);
-  // Handle actions (edit, delete, etc.)
+  if (action === 'edit') {
+    handleEdit(row);
+  } else if (action === 'delete') {
+    handleDelete(row);
+  }
 };
 
-const handleAddSection = () => {
-  console.log('Add section');
-  // Handle add section
+const handleCreate = () => {
+  router.visit(route('services.create'));
+};
+
+const handleEdit = (row) => {
+  router.visit(route('services.edit', row.id));
+};
+
+const handleDelete = (row) => {
+  if (confirm(`Are you sure you want to delete "${row.name?.en || row.name}"?`)) {
+    router.delete(route('services.destroy', row.id), {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Success message will come from the controller
+      },
+    });
+  }
+};
+
+const handleImport = (type) => {
+  console.log(`Import ${type}`);
+  // Handle import logic
 };
 </script>
 

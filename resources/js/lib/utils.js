@@ -10,3 +10,12 @@ export function cn(...inputs) {
     return twMerge(clsx(inputs));
 }
 
+/**
+ * Helper function for TanStack Table state updates
+ * @param {Function | any} updaterOrValue - Either a function or a value
+ * @param {import('vue').Ref} ref - Vue ref to update
+ */
+export function valueUpdater(updaterOrValue, ref) {
+    ref.value = typeof updaterOrValue === 'function' ? updaterOrValue(ref.value) : updaterOrValue;
+}
+
