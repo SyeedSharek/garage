@@ -1,0 +1,75 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Composer
+        run: composer install --no-dev --optimize-autoloader
+        working-directory: backend
+
+      - name: Install Backend NPM
+        run: npm install
+        working-directory: backend
+
+      - name: Build Backend
+        run: npm run build
+        working-directory: backend
+
+      - name: Install Frontend
+        run: npm install
+        working-directory: frontend
+
+      - name: Build Frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Export Frontend
+        run: npm run export
+        working-directory: frontend
+
+      - name: FTP Deploy Backend
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          password: ${{ secrets.CPANEL_PASSWORD }}
+          server-dir: public_html/backend
+          local-dir: backend/
+          port: 21
+
+      - name: FTP Deploy Frontend
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          password: ${{ secrets.CPANEL_PASSWORD }}
+          server-dir: public_html/frontend
+          local-dir: frontend/out/
+          port: 21
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules*
+            **/tests*
+            .env
+            .gitignore
+            README.md
