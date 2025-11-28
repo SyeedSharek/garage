@@ -28,9 +28,9 @@
                 <DropdownMenuItem @click="handleExport('excel')">Export Excel</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu> -->
-            <Button class="gap-2 h-10" @click="handleCreate">
-              <HugeiconsIcon :name="Add01Icon" class="h-4 w-4" />
-              Create Invoice
+            <Button class="gap-2 h-10" @click="handleCreateOrder">
+              <HugeiconsIcon :name="ShoppingBagIcon" class="h-4 w-4" />
+              Create Order
             </Button>
           </div>
         </div>
@@ -162,18 +162,16 @@
             </span>
           </template>
           <template #actions="{ row }">
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <Button variant="ghost" size="icon" class="h-8 w-8 hover:bg-gray-100">
-                  <HugeiconsIcon :name="Menu01Icon" class="h-4 w-4 text-gray-600" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem @click="handleView(row)">View</DropdownMenuItem>
-                <DropdownMenuItem @click="handleEdit(row)">Edit</DropdownMenuItem>
-                <DropdownMenuItem @click="handleDelete(row)" class="text-red-600">Delete</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div class="flex items-center gap-2">
+              <Button variant="outline" size="sm" class="h-8" @click="handleView(row)">
+                <HugeiconsIcon :name="File01Icon" class="h-4 w-4 mr-1" />
+                View
+              </Button>
+              <Button variant="default" size="sm" class="h-8" @click="handlePay(row)">
+                <HugeiconsIcon :name="DollarIcon" class="h-4 w-4 mr-1" />
+                Pay
+              </Button>
+            </div>
           </template>
         </DataTable>
       </div>
@@ -193,6 +191,9 @@ import {
   ArrowDown01Icon,
   Search01Icon,
   FilterHorizontalIcon,
+  ShoppingBagIcon,
+  File01Icon,
+  DollarIcon,
 } from '@hugeicons/core-free-icons';
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
@@ -360,8 +361,16 @@ const handleCreate = () => {
   router.visit(route('invoices.create'));
 };
 
+const handleCreateOrder = () => {
+  router.visit(route('orders.create'));
+};
+
 const handleView = (row) => {
   router.visit(route('invoices.show', row.id));
+};
+
+const handlePay = (row) => {
+  router.visit(route('invoices.payment', row.id));
 };
 
 const handleEdit = (row) => {

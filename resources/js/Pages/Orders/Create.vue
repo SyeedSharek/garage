@@ -7,7 +7,7 @@
       <AppHeader title="Create Order" subtitle="Create a new order" />
     </template>
     <template #default>
-      <div class="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div class="p-4 space-y-4">
         <!-- Page Header -->
         <div class="flex items-center justify-between mb-4">
           <div>
@@ -15,7 +15,7 @@
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Create a new order</p>
           </div>
           <Button variant="outline" class="gap-2" @click="handleCancel">
-            <HugeiconsIcon :name="ArrowLeft01Icon" class="h-4 w-4" />
+            <ChevronLeft class="h-4 w-4" />
             Back
           </Button>
         </div>
@@ -32,7 +32,7 @@
               <CardContent class="p-4 md:p-6">
                 <!-- Search Services -->
                 <div class="mb-4 relative">
-                  <HugeiconsIcon :name="Search01Icon" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+                  <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                   <Input
                     v-model="serviceSearch"
                     placeholder="Search services..."
@@ -92,7 +92,7 @@
                 <div v-else class="space-y-4">
                   <div
                     v-for="(item, index) in cartItems"
-                    :key="index"
+                    :key="item.id"
                     class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 relative"
                   >
                     <!-- Main Content: Justify Between -->
@@ -160,9 +160,11 @@
                     <Button
                       @click="handleContinue"
                       :disabled="cartItems.length === 0"
-                      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-md"
+                      size="lg"
+                      class="w-full px-4 py-2"
                     >
                       Continue
+                      <ChevronRight class="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -178,8 +180,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { HugeiconsIcon } from '@hugeicons/vue';
-import { ArrowLeft01Icon, Add01Icon, Delete01Icon, ArrowRight01Icon, Search01Icon } from '@hugeicons/core-free-icons';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
 import AppHeader from '@/Components/layout/AppHeader.vue';
@@ -198,7 +199,11 @@ const props = defineProps({
 const {
   cartItems,
   isLoading,
+  services: dbServices,
+  servicesLoading,
   loadCart,
+  loadServices,
+  saveServicesToDB,
   addToCart: addToCartDB,
   increaseQuantity: increaseQuantityDB,
   decreaseQuantity: decreaseQuantityDB,
@@ -207,25 +212,50 @@ const {
 
 const serviceSearch = ref('');
 
-// Load cart from IndexedDB on mount
+// Load all data from IndexedDB on mount
 onMounted(async () => {
+  // Load cart from IndexedDB
   await loadCart();
+
+  // Load services from IndexedDB first
+  const cachedServices = await loadServices();
+
+  // If we have cached services, use them
+  // Otherwise, save the props.services to IndexedDB for future use
+  if (cachedServices.length > 0) {
+    // Use cached services from IndexedDB
+    await saveServicesToDB(cachedServices);
+  } else if (props.services && props.services.length > 0) {
+    // Save fresh services to IndexedDB
+    await saveServicesToDB(props.services);
+  }
+});
+
+// Use services from IndexedDB if available, otherwise fallback to props
+const availableServices = computed(() => {
+  return dbServices.value.length > 0 ? dbServices.value : props.services;
 });
 
 const filteredServices = computed(() => {
   if (!serviceSearch.value) {
-    return props.services;
+    return availableServices.value;
   }
   const search = serviceSearch.value.toLowerCase();
-  return props.services.filter(service =>
-    service.name.en?.toLowerCase().includes(search) ||
-    service.name.ar?.toLowerCase().includes(search) ||
+  return availableServices.value.filter(service =>
+    service.name?.en?.toLowerCase().includes(search) ||
+    service.name?.ar?.toLowerCase().includes(search) ||
     service.code?.toLowerCase().includes(search)
   );
 });
 
 const addToCart = async (service) => {
-  await addToCartDB(service);
+  try {
+    // This calls the IndexedDB-connected function
+    await addToCartDB(service);
+  } catch (error) {
+    console.error('Failed to add item to cart:', error);
+    // You can add user notification here if needed
+  }
 };
 
 const removeFromCart = async (index) => {
@@ -276,9 +306,8 @@ const handleContinue = () => {
     subtotal: totalAmount.value,
   }));
 
-  // Navigate to order details/continue page
-  // You can create a route like: Route::get('orders/create/details', [OrderController::class, 'createDetails'])
-  router.visit('/orders/create/details');
+  // Navigate to customer selection page
+  router.visit(route('orders.create-details'));
 };
 </script>
 

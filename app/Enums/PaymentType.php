@@ -4,22 +4,25 @@ namespace App\Enums;
 
 enum PaymentType: string
 {
+    case CARD = 'card';
     case CASH = 'cash';
-    case CREDIT = 'credit';
+    case PAY_LATER = 'pay_later';
 
     public function label(): string
     {
         return match($this) {
+            self::CARD => 'Card',
             self::CASH => 'Cash',
-            self::CREDIT => 'Credit',
+            self::PAY_LATER => 'Pay Later',
         };
     }
 
     public function labelAr(): string
     {
         return match($this) {
+            self::CARD => 'بطاقة',
             self::CASH => 'نقد',
-            self::CREDIT => 'آجل',
+            self::PAY_LATER => 'دفع لاحقاً',
         };
     }
 

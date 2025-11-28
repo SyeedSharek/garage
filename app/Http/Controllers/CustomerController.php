@@ -97,7 +97,12 @@ class CustomerController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        Customer::create($validated);
+        $customer = Customer::create($validated);
+
+        // If request is from order creation page, stay on the same page
+        if (request()->header('Referer') && str_contains(request()->header('Referer'), 'orders/create/details')) {
+            return redirect()->back()->with('success', 'Customer created successfully.');
+        }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer created successfully.');
