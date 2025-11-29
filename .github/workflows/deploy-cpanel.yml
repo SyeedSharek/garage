@@ -1,52 +1,187 @@
-name: Deploy to cPanel
-
 on:
   push:
     branches:
-      - main
+      - main # Deploy only when pushing to main branch
+  pull_request:
+    branches:
+      - main # Run tests on PRs to main
+
+
+name: 🚀 Deploy website on push
 
 jobs:
-  deploy:
+  test:
+    name: 🧪 Run Tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup PHP
+      # 1. Checkout the latest code
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: 🛠 Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # 4. Setup PHP (needed for Ziggy)
+      - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, intl, bcmath
+          tools: composer:v2
 
-      - name: Setup Node
+      # 5. Validate PHP compatibility
+      - name: 🔍 Validate PHP Compatibility
+        run: |
+          echo "Checking composer.lock for PHP 8.2 compatibility..."
+          composer update
+          composer install --dry-run --no-dev
+
+      # 7. Build Frontend (after Ziggy is available)
+      - name: 🔨 Build Frontend
+        run: |
+          npm install
+          npm run build:ssr
+
+      # 8. Prepare Laravel environment for testing
+      - name: 🛠 Prepare Laravel environment for testing
+        run: |
+          cp .env.example .env.testing
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env.testing
+          echo "DB_CONNECTION=sqlite" >> .env.testing
+          echo "DB_DATABASE=database/database.sqlite" >> .env.testing
+          echo "CACHE_DRIVER=array" >> .env.testing
+          echo "QUEUE_CONNECTION=sync" >> .env.testing
+          mkdir -p database
+          touch database/database.sqlite
+
+      # 9. Run database migrations (only if needed)
+      - name: 🗄️ Run Database Migrations
+        run: |
+          ls
+
+          # Only run migrations if there are pending migrations
+          php artisan migrate:status | grep -q "Pending" && php artisan migrate --force || echo "No pending migrations"
+
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # 1. Checkout the latest code
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: 🛠 Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '24'
+          cache: 'npm'
 
-      - name: Install Composer Dependencies
-        run: composer update --no-dev --optimize-autoloader
+      # 3. Setup PHP for code quality checks
+      - name: 🐘 Setup PHP for Checks
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, bcmath
+          tools: composer:v2
 
-      - name: Install NPM Dependencies
-        run: npm ci
+      # 5. Install PHP dependencies (required for Ziggy)
+      - name: 📦 Install Composer dependencies
+        run: |
+          composer update
+          composer install --no-dev --optimize-autoloader
 
-      - name: Build Assets
-        run: npm run build
+      # 6. Install Node.js dependencies & build
+      - name: 🔨 Build Frontend
+        run: |
+          npm install
+          npm run build:ssr
+      # 7. Run database migrations (only if needed)
+      - name: 🗄️ Run Database Migrations
+        run: |
 
-      - name: FTP Deploy to cPanel
-        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+          # Only run migrations if there are pending migrations
+          php artisan migrate:status | grep -q "Pending" && php artisan migrate --force || echo "No pending migrations"
+
+      # 8. Prepare Laravel environment for deployment
+      # - name: 🛠 Prepare Laravel environment for deployment
+      #   run: |
+      #     # Create .env if it doesn't exist, otherwise preserve existing
+      #     if [ ! -f .env ]; then
+      #       cp .env.example .env
+      #       echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env
+      #     fi
+
+      #     # Temporarily override cache and queue for CI operations to avoid database dependency
+      #     # Store original values
+      #     export ORIGINAL_CACHE_STORE=$(grep "^CACHE_STORE=" .env | cut -d'=' -f2 || echo "database")
+      #     export ORIGINAL_QUEUE_CONNECTION=$(grep "^QUEUE_CONNECTION=" .env | cut -d'=' -f2 || echo "database")
+
+      #     # Temporarily set to array/sync for CI operations
+      #     sed -i 's/^CACHE_STORE=.*/CACHE_STORE=array/' .env
+      #     sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
+
+      #     # Create database directory for any potential SQLite operations
+      #     mkdir -p database
+
+      # 9. Laravel optimizations (safe for CI)
+      - name: ⚡ Laravel Optimize
+        run: |
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          # php artisan cache:clear
+          # Removed php artisan optimize to prevent path caching issues
+
+          # Restore original cache and queue configuration
+          # sed -i "s/^CACHE_STORE=.*/CACHE_STORE=$ORIGINAL_CACHE_STORE/" .env
+          # sed -i "s/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=$ORIGINAL_QUEUE_CONNECTION/" .env
+
+      # 9.1. Run migrations and cache configuration
+      - name: 🗄️ Run Migrations & Cache Config
+        run: |
+          # Run migrations if there are pending migrations
+          php artisan migrate:status | grep -q "Pending" && php artisan migrate --force || echo "No pending migrations"
+
+          # Cache configuration for better performance
+          php artisan config:cache
+
+      # 10. Clear any cached files that might have wrong paths
+      - name: 🧹 Clear Cached Files
+        run: |
+          # Remove any cached files that might contain wrong paths
+          rm -f bootstrap/cache/config.php
+          rm -f bootstrap/cache/routes.php
+          rm -f bootstrap/cache/services.php
+          rm -f bootstrap/cache/packages.php
+
+      # 11. Deploy via FTP
+      - name: 📂 Sync files to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.CPANEL_HOST }}
           username: ${{ secrets.CPANEL_USERNAME }}
           password: ${{ secrets.CPANEL_PASSWORD }}
-          server-dir: ./
-          local-dir: ./
-          port: 21
-          create-folder: true
+          method: ftp
           exclude: |
-           exclude: |
-            **/.git*
-            **/.github*
-            **/node_modules/*
-            **/vendor/*
-            **/tests/*
-
-
-
+            **/node_modules/**
+            **/vendor/**
+            **/.git/**
+            **/.github/**
+            **/.env
+            **/.cursor/**
+            **/.kiro/**
+            **/docs/**
+            **/tests/**
+          dangerous-clean-slate: false
+          log-level: minimal
+          dry-run: false
