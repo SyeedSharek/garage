@@ -99,8 +99,13 @@ class CustomerController extends Controller
 
         $customer = Customer::create($validated);
 
-        // If request is from order creation page, stay on the same page
-        if (request()->header('Referer') && str_contains(request()->header('Referer'), 'orders/create/details')) {
+        // If request is from order/invoice creation page, stay on the same page
+        $referer = request()->header('Referer');
+        if ($referer && (
+            str_contains($referer, 'orders/create') ||
+            str_contains($referer, 'invoices/create') ||
+            str_contains($referer, 'orders/create/details')
+        )) {
             return redirect()->back()->with('success', 'Customer created successfully.');
         }
 

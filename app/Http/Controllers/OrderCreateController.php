@@ -4,16 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
-use App\Models\Invoice;
 use App\Models\Service;
-use App\Models\Customer;
 use App\Enums\OrderStatus;
-use App\Enums\OrderPaymentType;
-use App\Enums\PaymentGateway;
-use App\Enums\PaymentStatus;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,10 +19,11 @@ class OrderCreateController extends Controller
      */
     public function create(): Response
     {
-        $services = Service::active()
-            ->ordered()
-            ->get()
-            ->map(function ($service) {
+        $services = Service::system()->active()->ordered()->get();
+        $customers = \App\Models\Customer::active()->orderBy('name')->get();
+
+        return Inertia::render('Orders/Create', [
+            'services' => $services->map(function ($service) {
                 return [
                     'id' => $service->id,
                     'code' => $service->code,
@@ -37,67 +33,18 @@ class OrderCreateController extends Controller
                     ],
                     'unit_price' => $service->unit_price,
                     'unit' => $service->unit,
-                    'formatted_price' => $service->formatted_price,
                 ];
-            });
-
-        return Inertia::render('Orders/Create', [
-            'services' => $services,
-        ]);
-    }
-
-    /**
-     * Show customer selection page for order creation.
-     */
-    public function createDetails(Request $request): Response
-    {
-        $query = Customer::active();
-
-        // Search functionality
-        if ($request->has('search') && $request->search) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('company_name', 'like', "%{$search}%");
-            });
-        }
-
-        $customers = $query->orderBy('name')
-            ->get()
-            ->map(function ($customer) {
+            }),
+            'customers' => $customers->map(function ($customer) {
                 return [
                     'id' => $customer->id,
                     'name' => $customer->name,
                     'phone' => $customer->phone,
                     'email' => $customer->email,
-                    'address' => $customer->address,
-                    'city' => $customer->city,
                     'type' => $customer->type,
-                    'company_name' => $customer->company_name,
                 ];
-            });
-
-        return Inertia::render('Orders/CreateDetails', [
-            'customers' => $customers,
+            }),
         ]);
-    }
-
-    /**
-     * Show the price form for creating an order.
-     */
-    public function createPrices(): Response
-    {
-        return Inertia::render('Orders/CreatePrices');
-    }
-
-    /**
-     * Show the order preview page.
-     */
-    public function createPreview(): Response
-    {
-        return Inertia::render('Orders/CreatePreview');
     }
 
     /**
@@ -107,257 +54,107 @@ class OrderCreateController extends Controller
     {
         $validated = $request->validated();
 
-        // Prepare order data
-        $orderData = [
-            'customer_id' => $validated['customer_id'],
-            'user_id' => auth()->id(),
-            'order_date' => $validated['order_date'] ?? now(),
-            'status' => $validated['status'] ?? OrderStatus::DRAFT,
-        ];
+        try {
+            return DB::transaction(function () use ($validated, $request) {
+                // Prepare order data
+                $orderData = [
+                    'customer_id' => $validated['customer_id'],
+                    'order_date' => $validated['order_date'] ?? now(),
+                    'status' => OrderStatus::PENDING,
+                    'subtotal' => $validated['subtotal'] ?? 0,
+                    'discount_amount' => $validated['discount'] ?? 0,
+                    'tax_amount' => $validated['tax'] ?? 0,
+                    'total_amount' => $validated['total'] ?? 0,
+                    'user_id' => auth()->id(),
+                ];
 
-        // Pre-fetch all services in one query
-        $serviceIds = array_column($validated['items'], 'service_id');
-        $services = Service::whereIn('id', $serviceIds)
-            ->select('id', 'name', 'unit', 'unit_price')
-            ->get()
-            ->keyBy('id');
+                // Create order
+                $order = Order::create($orderData);
 
-        // Prepare order items data
-        $orderItemsData = [];
-        $now = now();
-        $subtotal = 0;
+                // Create order items using model (handles JSON automatically)
+                foreach ($validated['items'] as $item) {
+                    $serviceId = $item['service_id'] ?? null;
+                    $serviceName = $item['description'] ?? null;
+                    $isCustom = $item['is_custom'] ?? false;
 
-        foreach ($validated['items'] as $index => $item) {
-            $service = $services->get($item['service_id']);
-            $amount = $item['quantity'] * $item['unit_price'];
-            $subtotal += $amount;
+                    // If it's a custom service (no service_id but has name), create it in services table
+                    if (!$serviceId && $serviceName) {
+                        $service = Service::create([
+                            'name' => [
+                                'en' => $serviceName,
+                                'ar' => $serviceName,
+                            ],
+                            'unit_price' => $item['unit_price'],
+                            'unit' => $item['unit'] ?? '',
+                            'is_active' => true,
+                            'is_custom' => true,
+                            'sort_order' => 0,
+                        ]);
+                        $serviceId = $service->id;
+                    }
 
-            // Get service name as JSON (simplified)
-            $description = $service
-                ? json_encode([
-                    'en' => $service->getTranslation('name', 'en', false) ?: '',
-                    'ar' => $service->getTranslation('name', 'ar', false) ?: '',
-                ])
-                : json_encode(['en' => '', 'ar' => '']);
+                    // Only create item if we have a service_id
+                    if ($serviceId) {
+                        // Format description as array for translatable field (model will handle JSON conversion)
+                        $description = null;
+                        if ($serviceName) {
+                            $description = [
+                                'en' => $serviceName,
+                                'ar' => $serviceName,
+                            ];
+                        }
 
-            $orderItemsData[] = [
-                'order_id' => 0, // Will be set after order creation
-                'service_id' => $item['service_id'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'amount' => $amount,
-                'sort_order' => $index + 1,
-                'unit' => $service->unit ?? 'pcs',
-                'description' => $description,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
+                        \App\Models\OrderItem::create([
+                            'order_id' => $order->id,
+                            'service_id' => $serviceId,
+                            'description' => $description,
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'unit' => $item['unit'] ?? 'pcs',
+                            'amount' => $item['quantity'] * $item['unit_price'],
+                        ]);
+                    }
+                }
 
-        // Calculate amounts
-        $subtotal = $validated['subtotal'] ?? $subtotal;
-        $discount = $validated['discount'] ?? 0;
-        $tax = $validated['tax'] ?? 0;
-        $total = $validated['total'] ?? ($subtotal - $discount + $tax);
+                // Create invoice (invoice_number will be auto-generated by GeneratesUniqueNumber trait)
+                $invoice = \App\Models\Invoice::create([
+                    'order_id' => $order->id,
+                    'customer_id' => $order->customer_id,
+                    'user_id' => auth()->id(),
+                    'invoice_date' => now(),
+                    'due_date' => now()->addDays(30),
+                    'total_amount' => $validated['total'] ?? $order->total_amount,
+                    'paid_amount' => 0,
+                    'status' => \App\Enums\PaymentStatus::DUE,
+                ]);
 
-        // Prepare payments data
-        $paymentsData = [];
-        $userId = auth()->id();
-        $paymentDate = $now;
-
-        if ($subtotal > 0) {
-            $paymentsData[] = [
-                'order_id' => 0, // Will be set after order creation
-                'payment_type' => OrderPaymentType::SUBTOTAL->value,
-                'amount' => $subtotal,
-                'notes' => 'Order subtotal',
-                'payment_date' => $paymentDate,
-                'user_id' => $userId,
-                'is_paid' => false,
-                'is_payable' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        if ($discount > 0) {
-            $paymentsData[] = [
-                'order_id' => 0,
-                'payment_type' => OrderPaymentType::DISCOUNT->value,
-                'amount' => $discount,
-                'notes' => 'Order discount',
-                'payment_date' => $paymentDate,
-                'user_id' => $userId,
-                'is_paid' => false,
-                'is_payable' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        if ($tax > 0) {
-            $paymentsData[] = [
-                'order_id' => 0,
-                'payment_type' => OrderPaymentType::TAX->value,
-                'amount' => $tax,
-                'notes' => 'Order tax',
-                'payment_date' => $paymentDate,
-                'user_id' => $userId,
-                'is_paid' => false,
-                'is_payable' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        if ($total > 0) {
-            $paymentsData[] = [
-                'order_id' => 0,
-                'payment_type' => OrderPaymentType::TOTAL->value,
-                'amount' => $total,
-                'notes' => 'Order total',
-                'payment_date' => $paymentDate,
-                'user_id' => $userId,
-                'is_paid' => false,
-                'is_payable' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        // Prepare invoice data
-        $invoiceData = [
-            'customer_id' => $validated['customer_id'],
-            'user_id' => auth()->id(),
-            'payment_gateway' => PaymentGateway::CASH,
-            'total_amount' => $total,
-            'paid_amount' => 0,
-            'invoice_date' => $now,
-            'status' => PaymentStatus::PENDING,
-        ];
-
-        // Generate order number manually to avoid trait loop
-        $orderNumber = $this->generateOrderNumber();
-
-        // Use optimized model method
-        $order = DB::transaction(function () use ($orderData, $orderItemsData, $paymentsData, $invoiceData, $orderNumber) {
-            // Create order with pre-generated number to avoid GeneratesUniqueNumber loop
-            $order = Order::withoutEvents(function () use ($orderData, $orderNumber) {
-                $orderData['order_number'] = $orderNumber;
-                return Order::create($orderData);
+                // Redirect to invoice payment page
+                return redirect()->route('invoices.payment', $invoice)
+                    ->with('success', 'Order and invoice created successfully.');
             });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Redirect to create page with validation errors
+            return redirect()->route('orders.create')
+                ->withErrors($e->validator->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            Log::error('Order creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['password', '_token']),
+            ]);
 
-            // Set order_id for items and payments
-            $orderId = $order->id;
-            foreach ($orderItemsData as &$item) {
-                $item['order_id'] = $orderId;
-            }
-            unset($item);
-
-            foreach ($paymentsData as &$payment) {
-                $payment['order_id'] = $orderId;
-            }
-            unset($payment);
-
-            // Bulk insert items
-            if (!empty($orderItemsData)) {
-                DB::table('order_items')->insert($orderItemsData);
-            }
-
-            // Bulk insert payments
-            if (!empty($paymentsData)) {
-                DB::table('order_payments')->insert($paymentsData);
-            }
-
-            // Generate invoice number manually
-            $invoiceNumber = $this->generateInvoiceNumber();
-
-            // Create invoice with pre-generated number
-            $invoice = Invoice::withoutEvents(function () use ($invoiceData, $orderId, $invoiceNumber) {
-                $invoiceData['invoice_number'] = $invoiceNumber;
-                return Invoice::create(array_merge($invoiceData, [
-                    'order_id' => $orderId,
-                ]));
-            });
-
-            // Link payments to invoice
-            DB::table('order_payments')
-                ->where('order_id', $orderId)
-                ->update(['invoice_id' => $invoice->id]);
-
-            return $order;
-        });
-
-        // Get the invoice ID to redirect to payment page
-        $invoice = $order->invoices()->first();
-
-        if ($invoice) {
-            // Redirect directly to payment page by invoice ID
-            return redirect()->route('invoices.payment', $invoice->id)
-                ->with('success', 'Order created successfully.');
+            return redirect()->route('orders.create')
+                ->with('error', 'Failed to create order: ' . $e->getMessage())
+                ->withInput();
         }
-
-        // Fallback to order show page if no invoice
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'Order created successfully.');
     }
 
     /**
-     * Generate a unique order number
+     * Show the preview page for order creation.
      */
-    private function generateOrderNumber(): string
+    public function createPreview(): Response
     {
-        $prefix = 'ORD';
-        $year = date('Y');
-        $month = date('m');
-        $column = 'order_number';
-        $maxAttempts = 10;
-
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $random = str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $number = $prefix . $year . $month . $random;
-
-            // Check if number exists using DB facade for speed
-            $exists = DB::table('orders')
-                ->where($column, $number)
-                ->exists();
-
-            if (!$exists) {
-                return $number;
-            }
-        }
-
-        // Fallback: use timestamp-based number
-        return $prefix . $year . $month . str_pad((string) time(), 10, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Generate a unique invoice number
-     */
-    private function generateInvoiceNumber(): string
-    {
-        $prefix = 'INV';
-        $year = date('Y');
-        $month = date('m');
-        $column = 'invoice_number';
-        $maxAttempts = 10;
-
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $random = str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $number = $prefix . $year . $month . $random;
-
-            // Check if number exists using DB facade for speed
-            $exists = DB::table('invoices')
-                ->where($column, $number)
-                ->exists();
-
-            if (!$exists) {
-                return $number;
-            }
-        }
-
-        // Fallback: use timestamp-based number
-        return $prefix . $year . $month . str_pad((string) time(), 10, '0', STR_PAD_LEFT);
+        return Inertia::render('Orders/CreatePreview');
     }
 }
-

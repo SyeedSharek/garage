@@ -383,16 +383,7 @@ class ServiceSeeder extends Seeder
                 'unit_price' => 0.00,
                 'sort_order' => 37,
             ],
-            [
-                'code' => '038',
-                'name' => [
-                    'en' => 'Others',
-                    'ar' => 'خدمة أخرى',
-                ],
-                'unit' => 'pcs',
-                'unit_price' => 0.00,
-                'sort_order' => 38,
-            ],
+
         ];
 
         foreach ($services as $service) {

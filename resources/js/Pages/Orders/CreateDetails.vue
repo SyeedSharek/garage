@@ -242,7 +242,7 @@
                       placeholder="0.00"
                       @input="calculateTotal"
                     />
-                    <span class="text-sm text-gray-500 whitespace-nowrap">SAR</span>
+                    <span class="text-sm text-gray-500 whitespace-nowrap">QR</span>
                   </div>
                 </div>
 
@@ -260,7 +260,7 @@
                       placeholder="0.00"
                       @input="calculateTotal"
                     />
-                    <span class="text-sm text-gray-500 whitespace-nowrap">SAR</span>
+                    <span class="text-sm text-gray-500 whitespace-nowrap">QR</span>
                   </div>
                 </div>
 
@@ -397,11 +397,11 @@ const calculateTotal = () => {
 };
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
+  const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount || 0);
+  return `QR ${formatted}`;
 };
 
 const filteredCustomers = computed(() => {
