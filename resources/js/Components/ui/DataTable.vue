@@ -41,9 +41,11 @@
 
     <!-- Table -->
     <Card class="w-full p-0">
-      <div class="p-4 pb-0">
+      <div class="p-4 pb-0 sm:p-6 sm:pb-0">
         <div class="rounded-md border border-border bg-background overflow-hidden">
-          <Table>
+          <div class="overflow-x-auto">
+            <div class="inline-block min-w-full align-middle">
+              <Table class="min-w-full">
             <TableHeader>
               <TableRow class="border-b border-border hover:bg-transparent bg-muted/30">
                 <TableHead v-if="selectable || draggable" class="w-12 h-12">
@@ -164,6 +166,8 @@
               </TableRow>
             </TableBody>
           </Table>
+            </div>
+          </div>
         </div>
       </div>
 
