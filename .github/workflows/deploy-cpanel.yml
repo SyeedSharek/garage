@@ -11,11 +11,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.2'
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -40,31 +39,14 @@ jobs:
           server-dir: ./
           local-dir: ./
           port: 21
+          create-folder: true
           exclude: |
+           exclude: |
             **/.git*
             **/.github*
-            **/node_modules*
-            **/vendor*
-            **/tests*
-            **/storage/logs*
-            **/storage/framework/cache*
-            **/storage/framework/sessions*
-            **/storage/framework/views*
-            **/.env*
-            **/.env.example
-            **/.gitignore
-            **/.gitattributes
-            **/README.md
-            **/phpunit.xml
-            **/vite.config.js
-            **/tailwind.config.js
-            **/postcss.config.js
-            **/jsconfig.json
-            **/components.json
-            **/package.json
-            **/package-lock.json
-            **/composer.json
-            **/composer.lock
-            **/database/database.sqlite
-            **/database/database.sqlite-journal
+            **/node_modules/*
+            **/vendor/*
+            **/tests/*
+
+
 
