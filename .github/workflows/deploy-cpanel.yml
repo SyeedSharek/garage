@@ -39,16 +39,17 @@ jobs:
           server-dir: ./
           local-dir: ./
           port: 21
+          create-folder: true
           exclude: |
             **/.git*
             **/.github*
-            **/node_modules*
-            **/vendor*
-            **/tests*
-            **/storage/logs*
-            **/storage/framework/cache*
-            **/storage/framework/sessions*
-            **/storage/framework/views*
+            **/node_modules/**
+            **/vendor/**
+            **/tests/**
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
             **/.env*
             **/.env.example
             **/.gitignore
