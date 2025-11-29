@@ -360,7 +360,7 @@ const handleCreateOrder = () => {
 };
 
 const handleView = (row) => {
-  router.visit(route('invoices.show', row.id));
+  window.open(route('invoices.print', row.id), '_blank');
 };
 
 const handlePay = (row) => {

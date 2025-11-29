@@ -230,10 +230,63 @@ class InvoiceController extends Controller
 
 
 
-    public function showInvoice()
+    public function showInvoice(Invoice $invoice)
     {
-        $services = InvoiceService::getServices();
-        return view('invoice.invoice', compact('services'));
+        $invoice->load(['customer', 'order.items', 'user']);
+
+        // Get description from translatable field or service name
+        $getDescription = function ($item) {
+            if ($item->description) {
+                // If description is JSON (translatable), get English version
+                if (is_array($item->description)) {
+                    return $item->description['en'] ?? $item->description['ar'] ?? 'N/A';
+                }
+                // If it's a string, return as is
+                if (is_string($item->description)) {
+                    return $item->description;
+                }
+            }
+            // Fallback to service name
+            if ($item->service) {
+                return $item->service->getTranslation('name', 'en') ?? $item->service->getTranslation('name', 'ar') ?? 'N/A';
+            }
+            return 'N/A';
+        };
+
+        // Get order items with serial numbers
+        $items = $invoice->order?->items->map(function ($item, $index) use ($getDescription) {
+            return [
+                'sl' => $index + 1,
+                'desc' => $getDescription($item),
+                'qty' => $item->quantity ?? 0,
+                'unit' => strtoupper($item->unit ?? 'PCS'),
+                'price' => (float) ($item->unit_price ?? 0),
+                'total' => (float) ($item->amount ?? 0),
+            ];
+        })->toArray() ?? [];
+
+        // Generate empty rows to fill up to 8 rows total
+        $itemCount = count($items);
+        $emptyRows = [];
+        if ($itemCount < 8) {
+            for ($i = 0; $i < (8 - $itemCount); $i++) {
+                $emptyRows[] = [];
+            }
+        }
+
+        // Format invoice data for blade template
+        $data = [
+            'invoice_no' => $invoice->invoice_number ?? (string) $invoice->id,
+            'customer_name' => $invoice->customer?->name ?? 'N/A',
+            'date' => $invoice->invoice_date?->format('d/m/Y') ?? now()->format('d/m/Y'),
+            'salesman' => $invoice->user?->name ?? 'N/A',
+            'items' => $items,
+            'empty_rows' => $emptyRows,
+            'total' => (float) ($invoice->order?->subtotal ?? $invoice->total_amount ?? 0),
+            'grand_total' => (float) $invoice->total_amount,
+        ];
+
+        return view('invoice.invoice', compact('data'));
     }
 
 
