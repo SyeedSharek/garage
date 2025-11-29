@@ -20,30 +20,37 @@ trait GeneratesUniqueNumber
 
     /**
      * Generate a unique number for the model
+     * Based on latest number for current month + 1
      *
      * @param string|null $prefix
-     * @param int $length
+     * @param int $length (ignored - kept for backward compatibility)
      * @return string
      */
-    public function generateUniqueNumber(?string $prefix = null, int $length = 8): string
+    public function generateUniqueNumber(?string $prefix = null, int $length = 0): string
     {
         $prefix = $prefix ?? $this->getDefaultPrefix();
         $column = $this->getUniqueNumberColumn();
+        $year = date('Y');
+        $month = date('m');
+        $yearMonth = $year . $month;
+        $pattern = $prefix . $yearMonth;
 
-        do {
-            // Generate number: PREFIX + YEAR + MONTH + RANDOM
-            $year = date('Y');
-            $month = date('m');
-            $random = str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        // Get the latest number for the current month by querying the number column
+        $lastNumber = static::where($column, 'like', $pattern . '%')
+            ->orderBy($column, 'desc')
+            ->value($column);
 
-            $number = $prefix . $year . $month . $random;
+        if ($lastNumber && str_starts_with($lastNumber, $pattern)) {
+            // Extract the sequence part (last 6 digits)
+            $sequence = (int) substr($lastNumber, -6) + 1;
+        } else {
+            // No previous records for this month, start from 1
+            $sequence = 1;
+        }
 
-            // If length is specified, truncate or pad
-            if ($length > 0) {
-                $number = substr($number, 0, $length);
-            }
-
-        } while ($this->where($column, $number)->exists());
+        // Format: PREFIX + YEAR + MONTH + SEQUENCE (6 digits)
+        // Example: ORD202511000001, INV202511000001
+        $number = $prefix . $yearMonth . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
 
         return $number;
     }

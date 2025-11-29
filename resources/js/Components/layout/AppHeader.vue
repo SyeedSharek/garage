@@ -12,7 +12,7 @@
         <div class="flex-1 max-w-xl mx-8 hidden lg:block">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <HugeiconsIcon :icon="Search01Icon" :size="20" color="rgb(156 163 175)" />
+              <Search :size="20" class="text-gray-400" />
             </div>
             <input
               type="text"
@@ -35,7 +35,7 @@
             @click="toggleNotifications"
             title="Notifications"
           >
-            <HugeiconsIcon :icon="Notification03Icon" :size="24" color="currentColor" />
+            <Bell :size="24" class="text-gray-500" />
             <span
               v-if="notificationCount > 0"
               class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"
@@ -48,7 +48,7 @@
             @click="toggleMessages"
             title="Messages"
           >
-            <HugeiconsIcon :icon="Message01Icon" :size="24" color="currentColor" />
+            <MessageSquare :size="24" class="text-gray-500" />
             <span
               v-if="messageCount > 0"
               class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"
@@ -61,13 +61,14 @@
             @click="toggleSettings"
             title="Settings"
           >
-            <HugeiconsIcon :icon="Settings01Icon" :size="24" color="currentColor" />
+            <Settings :size="24" class="text-gray-500" />
           </button>
 
           <!-- User Profile -->
-          <div class="relative ml-2">
+          <div class="relative ml-2" ref="dropdownContainer">
             <button
-              @click="dropdownOpen = !dropdownOpen"
+              ref="dropdownButton"
+              @click.stop="dropdownOpen = !dropdownOpen"
               class="flex items-center space-x-3 focus:outline-none hover:opacity-80 transition-opacity"
             >
               <div
@@ -79,11 +80,9 @@
                 <p class="text-sm font-medium text-gray-900">{{ userName }}</p>
                 <p class="text-xs text-gray-500">{{ userRole }}</p>
               </div>
-              <HugeiconsIcon
-                :icon="ArrowDown01Icon"
+              <ChevronDown
                 :size="16"
-                color="rgb(156 163 175)"
-                class="hidden md:block"
+                class="hidden md:block text-gray-400"
               />
             </button>
 
@@ -98,7 +97,8 @@
             >
               <div
                 v-if="dropdownOpen"
-                v-click-outside="() => (dropdownOpen = false)"
+                ref="dropdownMenu"
+                @click.stop
                 class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200"
               >
                 <Link
@@ -106,7 +106,7 @@
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors"
                   @click="dropdownOpen = false"
                 >
-                  <HugeiconsIcon :icon="User02Icon" :size="16" color="currentColor" class="mr-2" />
+                  <User :size="16" class="mr-2" />
                   Profile
                 </Link>
                 <a
@@ -114,7 +114,7 @@
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors"
                   @click="dropdownOpen = false"
                 >
-                  <HugeiconsIcon :icon="Settings01Icon" :size="16" color="currentColor" class="mr-2" />
+                  <Settings :size="16" class="mr-2" />
                   Settings
                 </a>
                 <hr class="my-1 border-gray-200" />
@@ -125,7 +125,7 @@
                   class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white transition-colors"
                   @click="dropdownOpen = false"
                 >
-                  <HugeiconsIcon :icon="Logout01Icon" :size="16" color="currentColor" class="mr-2" />
+                  <LogOut :size="16" class="mr-2" />
                   Logout
                 </Link>
               </div>
@@ -138,18 +138,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { HugeiconsIcon } from '@hugeicons/vue';
-import {
-  Search01Icon,
-  Notification03Icon,
-  Message01Icon,
-  Settings01Icon,
-  ArrowDown01Icon,
-  User02Icon,
-  Logout01Icon,
-} from '@hugeicons/core-free-icons';
+import { Search, Bell, MessageSquare, Settings, ChevronDown, User, LogOut } from 'lucide-vue-next';
 
 const props = defineProps({
   title: {
@@ -168,7 +159,9 @@ const props = defineProps({
 
 const page = usePage();
 const dropdownOpen = ref(false);
-
+const dropdownContainer = ref(null);
+const dropdownButton = ref(null);
+const dropdownMenu = ref(null);
 const notificationCount = ref(3);
 const messageCount = ref(2);
 
@@ -196,20 +189,25 @@ const toggleSettings = () => {
   console.log('Toggle settings');
 };
 
-// Click outside directive
-const vClickOutside = {
-  mounted(el, binding) {
-    el.clickOutsideEvent = (event) => {
-      if (!(el === event.target || el.contains(event.target))) {
-        binding.value();
-      }
-    };
-    document.addEventListener('click', el.clickOutsideEvent);
-  },
-  unmounted(el) {
-    document.removeEventListener('click', el.clickOutsideEvent);
-  },
+// Click outside handler
+const handleClickOutside = (event) => {
+  if (!dropdownOpen.value) return;
+
+  if (
+    dropdownContainer.value &&
+    !dropdownContainer.value.contains(event.target)
+  ) {
+    dropdownOpen.value = false;
+  }
 };
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>

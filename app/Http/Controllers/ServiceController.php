@@ -17,7 +17,7 @@ class ServiceController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Service::query();
+        $query = Service::system(); // Only show system services (exclude custom)
 
         // Search functionality
         if ($request->has('search') && $request->search) {

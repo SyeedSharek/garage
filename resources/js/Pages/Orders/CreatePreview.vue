@@ -133,6 +133,16 @@
           </CardContent>
         </Card>
 
+        <!-- Validation Errors -->
+        <div v-if="Object.keys(errors).length > 0" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+          <h3 class="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Please fix the following errors:</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li v-for="(error, field) in errors" :key="field" class="text-sm text-red-600 dark:text-red-400">
+              <strong>{{ field }}:</strong> {{ Array.isArray(error) ? error[0] : error }}
+            </li>
+          </ul>
+        </div>
+
         <!-- Action Buttons -->
         <div class="flex justify-end gap-4 pt-6">
           <Button variant="outline" @click="handleBack">
@@ -155,8 +165,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, computed, onMounted, watch } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
@@ -166,23 +176,25 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Com
 import { Label } from '@/Components/ui/label';
 import { useCartDB } from '@/composables/useIndexedDB';
 
+const page = usePage();
 const { cartItems: dbCartItems, getCartItems } = useCartDB();
 const cartItems = ref([]);
 const customer = ref(null);
 const discount = ref(0);
 const tax = ref(0);
 const processing = ref(false);
+const errors = ref(page.props.errors || {});
 
 onMounted(async () => {
-  // Check if customer data exists, if not redirect to details page
-  const customerData = sessionStorage.getItem('order_customer');
+  // Check if customer data exists, if not redirect to create page
+  const customerData = localStorage.getItem('order_customer');
   if (!customerData) {
-    router.visit(route('orders.create-details'));
+    router.visit(route('orders.create'));
     return;
   }
 
   // Check if cart data exists, if not redirect to create page
-  const cartData = sessionStorage.getItem('order_cart');
+  const cartData = localStorage.getItem('order_cart');
   if (!cartData) {
     router.visit(route('orders.create'));
     return;
@@ -199,7 +211,7 @@ onMounted(async () => {
     return;
   }
 
-  // Load cart items from sessionStorage
+  // Load cart items from localStorage
   if (cartData) {
     try {
       const parsed = JSON.parse(cartData);
@@ -214,11 +226,11 @@ onMounted(async () => {
       discount.value = parseFloat(parsed.discount) || 0;
       tax.value = parseFloat(parsed.tax) || 0;
     } catch (e) {
-      console.error('Error parsing cart data from sessionStorage:', e);
+      console.error('Error parsing cart data from localStorage:', e);
     }
   }
 
-  // If no items from sessionStorage, try IndexedDB
+  // If no items from localStorage, try IndexedDB
   if (cartItems.value.length === 0) {
     try {
       await getCartItems();
@@ -235,7 +247,7 @@ onMounted(async () => {
     }
   }
 
-  // Load customer from sessionStorage
+  // Load customer from localStorage
   if (customerData) {
     try {
       const parsed = JSON.parse(customerData);
@@ -245,6 +257,11 @@ onMounted(async () => {
     }
   }
 });
+
+// Watch for errors from page props
+watch(() => page.props.errors, (newErrors) => {
+  errors.value = newErrors || {};
+}, { immediate: true, deep: true });
 
 const getServiceName = (item) => {
   if (!item.name) return 'Service';
@@ -268,15 +285,15 @@ const total = computed(() => {
 });
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
+  const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount || 0);
+  return `QR ${formatted}`;
 };
 
 const handleBack = () => {
-  router.visit(route('orders.create-prices'));
+  router.visit(route('orders.create'));
 };
 
 const handleCreateOrder = () => {
@@ -285,29 +302,46 @@ const handleCreateOrder = () => {
   }
 
   processing.value = true;
+  errors.value = {}; // Clear previous errors
+
+  // Prepare items data
+  const itemsData = cartItems.value.map(item => {
+    const serviceName = typeof item.name === 'string'
+      ? item.name
+      : (item.name?.en || item.name?.ar || 'Custom Service');
+
+    return {
+      service_id: item.service_id || null,
+      description: item.is_custom ? serviceName : null,
+      is_custom: item.is_custom || false,
+      quantity: parseInt(item.quantity) || 1,
+      unit_price: parseFloat(item.unit_price) || 0,
+      unit: item.unit || '',
+    };
+  });
 
   // Create order with items
   router.post(route('orders.store'), {
     customer_id: customer.value.id,
     order_date: new Date().toISOString().split('T')[0],
-    items: cartItems.value.map(item => ({
-      service_id: item.service_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-    })),
-    subtotal: subtotal.value,
-    discount: discount.value || 0,
-    tax: tax.value || 0,
-    total: total.value,
+    items: itemsData,
+    subtotal: parseFloat(subtotal.value) || 0,
+    discount: parseFloat(discount.value) || 0,
+    tax: parseFloat(tax.value) || 0,
+    total: parseFloat(total.value) || 0,
   }, {
+    preserveScroll: true,
     onSuccess: () => {
-      // Clear cart from IndexedDB and sessionStorage
-      sessionStorage.removeItem('order_cart');
-      sessionStorage.removeItem('order_customer');
+      // Clear cart from IndexedDB and localStorage
+      localStorage.removeItem('order_cart');
+      localStorage.removeItem('order_customer');
+      localStorage.removeItem('order_create_state');
       // Redirect will be handled by the backend
     },
-    onError: () => {
+    onError: (err) => {
+      errors.value = err;
       processing.value = false;
+      console.error('Validation errors:', err);
     },
   });
 };

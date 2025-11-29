@@ -247,6 +247,26 @@ export const useCartDB = () => {
       // Ensure IndexedDB is initialized
       await initDB();
 
+      // For custom services (no service_id), always add as new item
+      if (service.is_custom || !service.service_id) {
+        const newItem = {
+          id: service.id || `cart_custom_${Date.now()}`,
+          service_id: null,
+          code: service.code || null,
+          name: service.name,
+          unit_price: service.unit_price,
+          formatted_price: service.formatted_price || `QR ${service.unit_price.toFixed(2)}`,
+          unit: service.unit || 'pcs',
+          quantity: 1,
+          is_custom: true,
+        };
+        // Add to reactive array
+        cartItems.value.push(newItem);
+        // Save to IndexedDB
+        await saveCartItem(newItem);
+        return;
+      }
+
       // Check if item already exists by service_id
       const existingIndex = cartItems.value.findIndex(item => item.service_id === service.id);
 
@@ -317,6 +337,25 @@ export const useCartDB = () => {
   };
 
   /**
+   * Update item unit price
+   */
+  const updatePrice = async (index, newPrice) => {
+    if (newPrice < 0) return;
+
+    try {
+      const item = cartItems.value[index];
+      if (item) {
+        item.unit_price = parseFloat(newPrice) || 0;
+        // Update formatted_price
+        item.formatted_price = `QR ${item.unit_price.toFixed(2)}`;
+        await saveCartItem(item);
+      }
+    } catch (error) {
+      console.error('Error updating price:', error);
+    }
+  };
+
+  /**
    * Remove item from cart
    */
   const removeFromCart = async (index) => {
@@ -383,6 +422,7 @@ export const useCartDB = () => {
     saveServicesToDB,
     addToCart,
     updateQuantity,
+    updatePrice,
     increaseQuantity,
     decreaseQuantity,
     removeFromCart,

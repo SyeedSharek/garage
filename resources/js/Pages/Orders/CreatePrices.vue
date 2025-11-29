@@ -55,7 +55,7 @@
                         placeholder="0.00"
                         @input="calculateTotal"
                       />
-                      <span class="text-sm text-gray-500 whitespace-nowrap">SAR</span>
+                      <span class="text-sm text-gray-500 whitespace-nowrap">QR</span>
                     </div>
                   </div>
 
@@ -73,7 +73,7 @@
                         placeholder="0.00"
                         @input="calculateTotal"
                       />
-                      <span class="text-sm text-gray-500 whitespace-nowrap">SAR</span>
+                      <span class="text-sm text-gray-500 whitespace-nowrap">QR</span>
                     </div>
                   </div>
 
@@ -128,8 +128,8 @@ const discount = ref(0);
 const tax = ref(0);
 
 onMounted(async () => {
-  // Redirect to details page since pricing is now merged there
-  router.visit(route('orders.create-details'));
+  // Redirect to create page since pricing is now merged there
+  router.visit(route('orders.create'));
   return;
 
   // Check if cart data exists, if not redirect to create page
@@ -226,15 +226,15 @@ const calculateTotal = () => {
 };
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
+  const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount || 0);
+  return `QR ${formatted}`;
 };
 
 const handleBack = () => {
-  router.visit(route('orders.create-details'));
+  router.visit(route('orders.create'));
 };
 
 const handleContinue = () => {

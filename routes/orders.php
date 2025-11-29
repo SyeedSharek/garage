@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/{invoice}/payment', [OrderController::class, 'paymentByInvoice'])->name('invoices.payment');
     Route::post('orders/{order}/payment/process', [OrderController::class, 'processPayment'])->name('orders.payment.process');
     Route::post('invoices/{invoice}/payment/process', [OrderController::class, 'processPaymentByInvoice'])->name('invoices.payment.process');
+    Route::get('payments/success', [OrderController::class, 'paymentSuccess'])->name('payments.success');
 
     // Other order routes
     Route::resource('orders', OrderController::class)->except(['create', 'store']);

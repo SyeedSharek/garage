@@ -14,6 +14,10 @@
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
+
+        <!-- Ionicons Loader -->
+        <script type="module" src="https://esm.sh/ionicons@8.0.13/loader"></script>
+        <script nomodule src="https://esm.sh/ionicons@8.0.13/loader"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia

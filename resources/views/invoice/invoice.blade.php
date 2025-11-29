@@ -3,504 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shahbaz Auto Service Invoice</title>
+    <title>Invoice #{{ $data['invoice_no'] }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #0d1b41;
         }
 
         body {
-            background-color: #f5f5f5;
-            padding: 10px;
-            color: #333;
-            font-size: 11px;
-        }
-
-        .invoice-container {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            background-color: white;
-            padding: 15mm;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .content-area {
-            flex: 1;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #333;
-        }
-
-        .header-left {
-            text-align: right;
-            direction: rtl;
-            flex: 1;
-        }
-
-        .header-left p {
-            margin-bottom: 2px;
-            font-size: 10px;
-            line-height: 1.2;
-        }
-
-        .header-middle {
-            flex: 2;
-            text-align: center;
-        }
-
-        .header-middle h1 {
+            font-family: 'Arial', sans-serif; /* Arimo is close to Arial/Helvetica used in printers */
             font-size: 14px;
-            margin-bottom: 3px;
-            color: #2c3e50;
-            direction: rtl;
-            line-height: 1.2;
         }
 
-        .header-middle h2 {
-            font-size: 12px;
-            margin-bottom: 3px;
-            color: #2c3e50;
-            line-height: 1.2;
-        }
-
-        .header-middle h3 {
-            font-size: 10px;
-            color: #2c3e50;
-            font-weight: normal;
-            line-height: 1.2;
-        }
-
-        .header-right {
-            flex: 1;
-            text-align: left;
-        }
-
-        .header-right p {
-            margin-bottom: 2px;
-            font-size: 10px;
-            line-height: 1.2;
-        }
-
-        .customer-section {
-            margin: 15px 0;
-            padding: 8px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 2px;
-        }
-
-        .section-title {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #2c3e50;
-            text-align: center;
-        }
-
-        .bilingual-title {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .bilingual-title span:last-child {
-            direction: rtl;
-        }
-
-        .customer-details {
-            margin-top: 6px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-        }
-
-        .customer-info {
-            flex: 1;
-        }
-
-        .customer-info p {
-            margin-bottom: 2px;
-            line-height: 1.2;
-        }
-
-        .invoice-info {
-            flex: 1;
-            text-align: right;
-        }
-
-        .invoice-info p {
-            margin-bottom: 2px;
-            line-height: 1.2;
-        }
-
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 12px 0;
-            table-layout: fixed;
-            font-size: 9px;
-        }
-
-        .invoice-table th {
-            background-color: #2c3e50;
-            color: white;
-            padding: 6px 4px;
-            text-align: center;
-            border: 1px solid #ddd;
-            font-weight: 600;
-            line-height: 1.1;
-        }
-
-        .invoice-table td {
-            padding: 4px 3px;
-            border: 1px solid #ddd;
-            text-align: center;
-            word-wrap: break-word;
-            line-height: 1.2;
-            vertical-align: middle;
-        }
-
-        .invoice-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .bilingual-header {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .bilingual-header .english {
-            font-weight: 600;
-            font-size: 8px;
-        }
-
-        .bilingual-header .arabic {
-            font-weight: 600;
-            direction: rtl;
-            font-size: 8px;
-        }
-
-        .footer {
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-        }
-
-        .service-info {
-            flex: 1;
-        }
-
-        .service-info p {
-            margin-bottom: 2px;
-            line-height: 1.2;
-        }
-
-        .signature-area {
-            flex: 1;
-            text-align: right;
-        }
-
-        .bilingual-text {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-            font-size: 9px;
-        }
-
-        .bilingual-text span:last-child {
-            direction: rtl;
-        }
-
-        .signature-line {
-            margin-top: 25px;
-            width: 180px;
-            border-top: 1px solid #333;
-            margin-left: auto;
-            text-align: center;
-            padding-top: 3px;
-            font-size: 9px;
-        }
-
-        .total-row {
-            font-weight: 700;
-            background-color: #e8f4fc !important;
-        }
-
-        .print-btn {
-            display: block;
-            margin: 15px auto 0;
-            padding: 8px 20px;
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .print-btn:hover {
-            background-color: #1a252f;
+        /* Make borders more visible */
+        table,
+        table td,
+        table th {
+            border-style: solid;
         }
 
         @media print {
-            @page {
-                size: A4;
-                margin: 10mm;
-            }
-
             body {
                 background-color: white;
-                padding: 0;
-                font-size: 11px;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                font-size: 12px;
             }
+            .no-print { display: none; }
+            @page { margin: 0; size: A4; }
 
-            .invoice-container {
-                box-shadow: none;
-                padding: 0;
-                width: 100%;
-                min-height: auto;
-                margin: 0;
+            /* Adjust font sizes for print */
+            .text-xs { font-size: 0.65rem !important; }
+            .text-sm { font-size: 0.75rem !important; }
+            .text-base { font-size: 0.875rem !important; }
+            .text-lg { font-size: 1rem !important; }
+
+            /* Ensure table text is readable */
+            table {
+                font-size: 0.7rem;
             }
-
-            .print-btn {
-                display: none;
+            table th {
+                font-size: 0.65rem;
             }
-
-            .invoice-table {
-                page-break-inside: avoid;
-            }
-
-            .header {
-                page-break-after: avoid;
-            }
-
-            .customer-section {
-                page-break-after: avoid;
+            table td {
+                font-size: 0.7rem;
             }
         }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
 
-            .header-left, .header-right {
-                text-align: center;
-                margin-bottom: 15px;
-            }
-
-            .header-left {
-                direction: ltr;
-                flex-direction: column;
-            }
-
-            .customer-details {
-                flex-direction: column;
-            }
-
-            .invoice-info {
-                text-align: left;
-                margin-top: 15px;
-            }
-
-            .footer {
-                flex-direction: column;
-            }
-
-            .signature-area {
-                text-align: left;
-                margin-top: 15px;
-            }
-
-            .signature-line {
-                margin-left: 0;
-            }
-
-            .invoice-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="invoice-container">
-        <div class="content-area">
-        <div class="header">
-            <div class="header-left">
-                <p>جوال : ٥٠۱٩٧٢٤٨</p>
-                <p>ست : ۱۹۹۹۸۹</p>
-                <p>الهلال نعيجة</p>
-                <p>الدوحة - قطر</p>
-            </div>
-            <div class="header-middle">
-                <h1>شهباز لخدمات السيارات والخدمات</h1>
-                <h2>SHAHBAZ AUTO SERVICE & TRADING</h2>
-                <h3>فاتورة نقدا على / الحساب Invoice/Credit/Cash</h3>
-            </div>
-            <div class="header-right">
-                <p>Mob: 50197248</p>
-                <p>C.R. No: 199989</p>
-                <p>Al Hilal, Nuaija</p>
-                <p>DOHA-QATAR</p>
-                <p>No: 0444</p>
-            </div>
+
+    <div class="relative bg-white text-black p-[10mm] overflow-hidden text-sm leading-tight rounded-md">
+
+        <div class="absolute inset-0 z-0 flex items-center justify-center opacity-20 pointer-events-none select-none overflow-hidden">
+             <img src="{{ asset('assets/invoice-watermark.png') }}"
+                  alt="Watermark"
+                  class="w-full h-full object-contain"
+                  style="max-width: 100%; max-height: 100%;">
         </div>
 
-        <div class="customer-section">
-            <div class="section-title">
-                <div class="bilingual-title">
-                    <span>Customer Name & Address</span>
-                    <span>اسم وعنوان العميل</span>
+        <div class="relative z-10 h-full flex flex-col justify-between">
+
+            <div>
+                <div class="flex justify-between items-start mb-1">
+
+                    <div class="w-[28%] text-xs text-gray-700 space-y-[1px] leading-tight">
+                        <p>Mob: +974 3005 5831 / Tel: 4142 3974</p>
+                        <p>C.R. No: 162700, P.O. Box: 37206</p>
+                        <p>Street No: 105, Zone: 57</p>
+                        <p>Bldg No: 183, Wakalat Street: 28</p>
+                        <p>Shop No: 10/11, Industrial Area</p>
+                        <p class="font-bold mt-1">BRANCH: AL AZIZIYA, SALWA ROAD</p>
+                        <p>Mob: +974 7770 6384 / Tel: 4145 8911</p>
+                        <p>C.R: 162700 / 01 Unit: 18, ZONE: 55,</p>
+                        <p>STREET: 185, NEAR QATARPOST AZIZIYA</p>
+                        <p>SALWA ROAD, DOHA - QATAR</p>
+                        <p>E-mail: infoautotabpartsqatar@gmail.com</p>
+                    </div>
+
+                    <div class="w-[44%] ">
+                        <div class="flex justify-center items-center mb-2 ">
+                            <img src="{{ asset('assets/full logo and name.png') }}" alt="Logo with Company Name" class="w-full h-auto object-contain max-h-36 mx-auto">
+                        </div>
+                    </div>
+
+                    <div class="w-[28%] text-xs text-right text-gray-700 space-y-[1px] leading-tight" dir="rtl">
+                        <p>هاتف: ٤١٤٢٣٩٧٤ / ٣٠٠٥٥٨٣١</p>
+                        <p>جوال: ٧٧٧٩٠٦٨٤ / ٤١٤٥٨٩١١</p>
+                        <p>ص.ب: ٣٧٢٠٦</p>
+                        <p>س.ت: ١٦٢٧٠٠</p>
+                        <p>شارع رقم: ١٠٥ المنطقة: ٥٧</p>
+                        <p>رقم المبنى: ١٨٣، شارع الوكالات: ٢٨</p>
+                        <p>محل رقم: ١٠/١١، منطقة صناعية</p>
+                        <p class="font-bold">الفرع: العزيزية، طريق سلوى</p>
+                        <p>هاتف: ٤١٤٥٨٩١١</p>
+                        <p>جوال: ٧٧٧٩٠٦٣٨</p>
+                        <p>س.ت: ١٨٢٧٠٠ / ٠١</p>
+                        <p>الوحدة: ١٨ المنطقة: ٥٥ الشارع: ١٨٥</p>
+                        <p>بالقرب من: بريد قطر العزيزية، طريق سلوى</p>
+                        <p>الموقع: الدوحة، قطر</p>
+                    </div>
                 </div>
+
+                <h2 class="text-center text-lg font-bold underline decoration-1 underline-offset-2 mb-2 mt-4">Cash Invoice</h2>
+
+                <!-- Invoice Table Container with Border Radius -->
+                <div class="border-2 border-blue-700 rounded-md overflow-hidden mb-4">
+                    <table class="w-full border-collapse">
+                        <!-- Customer Info Section -->
+                        <thead>
+                            <tr>
+                                <td colspan="6" class="p-0">
+                                    <table class="w-full border-collapse">
+                                        <tr>
+                                            <td class="w-[65%] border-r border-b border-blue-700 p-0">
+                                                <div class="flex flex-col">
+                                                    <div class="flex justify-between bg-gray-100 border-b border-blue-700 px-2 py-1 font-bold text-xs">
+                                                        <span>Customer Name & Address</span>
+                                                        <span dir="rtl">اسم وعنوان العميل</span>
+                                                    </div>
+                                                    <div class="flex-grow flex items-center px-4 py-3 font-bold text-sm uppercase">
+                                                        {{ $data['customer_name'] }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="w-[35%] border-b border-blue-700 p-0">
+                                                <table class="w-full border-collapse">
+                                                    <tr>
+                                                        <td class="w-1/2 border-r border-b border-blue-700 p-0">
+                                                            <div class="bg-gray-100 border-b border-blue-700 text-center py-1 font-bold text-xs">
+                                                                Document No. <span dir="rtl">رقم الوثيقة</span>
+                                                            </div>
+                                                            <div class="flex items-center justify-center py-3 font-bold text-red-600 text-sm">
+                                                                {{ $data['invoice_no'] }}
+                                                            </div>
+                                                        </td>
+                                                        <td class="w-1/2 border-b border-blue-700 p-0">
+                                                            <div class="bg-gray-100 border-b border-blue-700 text-center py-1 font-bold text-xs">
+                                                                Date <span dir="rtl">التاريخ</span>
+                                                            </div>
+                                                            <div class="flex items-center justify-center py-3 font-bold text-xs">
+                                                                {{ $data['date'] }}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="border-b border-blue-700 px-2 py-1 bg-gray-50 text-xs">
+                                                <span class="font-bold mr-4">Salesman:</span>
+                                                <span class="uppercase font-bold">{{ $data['salesman'] }}</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </thead>
+
+                        <!-- Items Table Header -->
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-blue-700 w-[5%] text-center font-bold py-2">
+                                    <div class="flex flex-col text-[10px] leading-tight">
+                                        <span>SL. No.</span>
+                                        <span dir="rtl">رقم مسلسل</span>
+                                    </div>
+                                </th>
+                                <th class="border border-blue-700 w-[55%] text-left px-2 font-bold py-2">
+                                    <div class="flex justify-between items-center">
+                                        <span>DESCRIPTION</span>
+                                        <span dir="rtl">التفاصيل</span>
+                                    </div>
+                                </th>
+                                <th class="border border-blue-700 w-[8%] text-center font-bold py-2">
+                                    <div class="flex flex-col text-[10px] leading-tight">
+                                        <span>QTY.</span>
+                                        <span dir="rtl">الكمية</span>
+                                    </div>
+                                </th>
+                                <th class="border border-blue-700 w-[8%] text-center font-bold py-2">
+                                    <div class="flex flex-col text-[10px] leading-tight">
+                                        <span>UNIT</span>
+                                        <span dir="rtl">وحدة</span>
+                                    </div>
+                                </th>
+                                <th class="border border-blue-700 w-[10%] text-center font-bold py-2">
+                                    <div class="flex flex-col text-[10px] leading-tight">
+                                        <span>UNIT PRICE</span>
+                                        <span dir="rtl">سعر الوحدة</span>
+                                    </div>
+                                </th>
+                                <th class="border border-blue-700 w-[14%] text-center font-bold py-2">
+                                    <div class="flex flex-col text-[10px] leading-tight">
+                                        <span>TOTAL AMOUNT</span>
+                                        <span dir="rtl">الأجمالي</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <!-- Items Table Body -->
+                        <tbody>
+                            @foreach($data['items'] as $item)
+                            <tr class="h-8">
+                                <td class="border-r border-blue-700 text-center align-middle">{{ $item['sl'] }}</td>
+                                <td class="border-r border-blue-700 px-2 align-middle font-bold text-xs">{{ $item['desc'] }}</td>
+                                <td class="border-r border-blue-700 text-center align-middle font-bold">{{ $item['qty'] }}</td>
+                                <td class="border-r border-blue-700 text-center align-middle">{{ $item['unit'] }}</td>
+                                <td class="border-r border-blue-700 text-center align-middle">{{ number_format($item['price'], 2) }}</td>
+                                <td class="border-blue-700 text-center align-middle bg-gray-50">{{ number_format($item['total'], 2) }}</td>
+                            </tr>
+                            @endforeach
+
+                            @foreach($data['empty_rows'] as $row)
+                            <tr class="h-8">
+                                <td class="border-r border-blue-700"></td>
+                                <td class="border-r border-blue-700"></td>
+                                <td class="border-r border-blue-700"></td>
+                                <td class="border-r border-blue-700"></td>
+                                <td class="border-r border-blue-700"></td>
+                                <td class="border-blue-700 bg-gray-50"></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+
+                        <!-- Totals Section -->
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="p-0 border-t border-blue-700">
+                                    <table class="w-full border-collapse">
+                                        <tr>
+                                            <td class="w-[70%] border-r border-blue-700 p-2 h-28 align-bottom"></td>
+                                            <td class="w-[30%] border-blue-700 p-0 align-top">
+                                                <table class="w-full border-collapse">
+                                                    <tr class="h-9 border-b border-blue-700">
+                                                        <td class="w-[40%] border-r border-blue-700 bg-gray-50 font-bold text-[10px] text-center align-middle">
+                                                            <div class="flex flex-col leading-tight">
+                                                                <span>TOTAL</span>
+                                                                <span dir="rtl">الأجمالي</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="w-[60%] text-center font-bold align-middle">
+                                                            {{ number_format($data['total'], 2) }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="h-9 border-b border-blue-700">
+                                                        <td class="w-[40%] border-r border-blue-700 bg-gray-50 font-bold text-[10px] text-center align-middle">
+                                                            <div class="flex flex-col leading-tight">
+                                                                <span>DISCOUNT</span>
+                                                                <span dir="rtl">خصم</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="w-[60%] text-center align-middle">
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="h-10">
+                                                        <td class="w-[40%] border-r border-blue-700 bg-gray-50 font-bold text-[10px] text-center align-middle">
+                                                            <div class="flex flex-col leading-tight">
+                                                                <span>GRAND TOTAL</span>
+                                                                <span dir="rtl">المبلغ الأجمالي</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="w-[60%] text-center font-bold text-sm align-middle">
+                                                            {{ number_format($data['grand_total'], 3) }}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Signature Section -->
+                <div class="border-2 border-blue-700 rounded-md overflow-hidden mb-4">
+                    <table class="w-full border-collapse">
+                        <tbody>
+                            <tr>
+                                <td class="w-1/2 border-r border-blue-700 p-2 h-24 align-bottom">
+                                    <div class="flex items-end">
+                                        <span class="mr-2 text-xs">Receiver's Sign :</span>
+                                        <span class="border-b border-dotted border-blue-700 w-40 inline-block"></span>
+                                        <span class="ml-2 text-xs" dir="rtl">علامة المتلقي</span>
+                                    </div>
+                                </td>
+                                <td class="w-1/2 border-blue-700 p-2 h-24 align-bottom text-right">
+                                    <p class="mb-8 text-xs">Authorized Sign</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            <div class="mt-2 flex justify-between items-center px-4 gap-2 grayscale opacity-60">
+                @for($i = 1; $i <= 12; $i++)
+                    <img src="{{ asset('assets/car-logos/car-' . $i . '.png') }}"
+                         alt="Car Logo {{ $i }}"
+                         class="h-8 w-auto object-contain flex-1"
+                         onerror="this.style.display='none'">
+                @endfor
             </div>
-            <div class="customer-details">
-                <div class="customer-info">
-                    <p><strong>Customer:</strong> SHAHBAZ AUTO HILAL</p>
-                    <p><strong>Address:</strong> Industrial Area, Street 45, Doha</p>
-                </div>
-                <div class="invoice-info">
-                    <p><strong>Invoice No:</strong> INV-2023-0444</p>
-                    <p><strong>Date:</strong> 15 November 2023</p>
-                </div>
-            </div>
+
         </div>
-
-        <table class="invoice-table">
-            <thead>
-                <tr>
-                    <th width="6%">
-                        <div class="bilingual-header">
-                            <div class="english">SL. No.</div>
-                            <div class="arabic">التسلسل</div>
-                        </div>
-                    </th>
-                    <th width="45%">
-                        <div class="bilingual-header">
-                            <div class="english">DESCRIPTION</div>
-                            <div class="arabic">الوصف</div>
-                        </div>
-                    </th>
-                    <th width="7%">
-                        <div class="bilingual-header">
-                            <div class="english">QTY.</div>
-                            <div class="arabic">الكمية</div>
-                        </div>
-                    </th>
-                    <th width="7%">
-                        <div class="bilingual-header">
-                            <div class="english">UNIT</div>
-                            <div class="arabic">وحدة</div>
-                        </div>
-                    </th>
-                    <th width="15%">
-                        <div class="bilingual-header">
-                            <div class="english">UNIT PRICE</div>
-                            <div class="arabic">سعر الوحدة</div>
-                        </div>
-                    </th>
-                    <th width="15%">
-
-                        <div class="bilingual-header">
-                            <div class="english">TOTAL AMOUNT</div>
-                            <div class="arabic">المبلغ الإجمالي</div>
-                        </div>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>MN: 25871/MRLANCERQTUP LOWER SMALL BUSH (MR4034K)</td>
-                    <td>2</td>
-                    <td>PCS</td>
-                    <td>50.00</td>
-                    <td>100.00</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>MN: 84133-TABLANCERQTUP COSTER BUSH (MR-4034F)</td>
-                    <td>2</td>
-                    <td>PCS</td>
-                    <td>30.00</td>
-                    <td>60.00</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>BUSH FIXING BUSH & LATHE SERVICE CHARGES</td>
-                    <td>4</td>
-                    <td>PCS</td>
-                    <td>10.00</td>
-                    <td>40.00</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
-
-        <div class="total-section" style="margin-top: auto; padding: 10px 0; border-top: 2px solid #333; margin-bottom: 10px;">
-            <div style="text-align: right; font-size: 12px; font-weight: bold ;">
-                <span>Sub Total: QR 200.00</span>
-            </div>
-            <div style="text-align: right; font-size: 12px; font-weight: bold mb-1;">
-                <span>Discount: QR 200.00</span>
-            </div>
-            <div style="text-align: right; font-size: 12px; font-weight: bold   ;">
-                <span>Total Amount: QR 200.00</span>
-            </div>
-        </div>
-
-        <div class="footer">
-            <div class="service-info">
-                <p><strong>Autohub Cars Service And Bush Fixing, Shop No. 9.</strong></p>
-                <p>Bush Fixing & Car Service Available</p>
-                <p>Thank you for your business!</p>
-            </div>
-
-            <div class="signature-area">
-                <div class="bilingual-text">
-                    <span>Receiver's Sign :</span>
-                    <span>توقيع المستلم</span>
-                </div>
-                <div class="bilingual-text">
-                    <span>Date</span>
-                    <span>التاريخ</span>
-                </div>
-                <div class="signature-line">Signature</div>
-            </div>
-        </div>
-
-        <button class="print-btn" onclick="window.print()">Print Invoice</button>
     </div>
 
-    <script>
-        // Add current date to the invoice
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const dateString = today.toLocaleDateString('en-US', options);
+    <div class="fixed bottom-8 right-8 no-print z-20">
+        <button onclick="window.print()" class="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-full shadow-lg flex items-center gap-2 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+        </button>
+    </div>
 
-            // Update the date in the invoice info
-            document.querySelector('.invoice-info p:nth-child(2)').innerHTML = `<strong>Date:</strong> ${dateString}`;
-        });
-    </script>
 </body>
 </html>

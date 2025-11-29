@@ -31,7 +31,10 @@ class StoreOrderRequest extends FormRequest
                 Rule::enum(OrderStatus::class),
             ],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.service_id' => ['required', 'exists:services,id'],
+            'items.*.service_id' => ['nullable', 'exists:services,id'],
+            'items.*.description' => ['nullable', 'string'], // For custom services
+            'items.*.is_custom' => ['sometimes', 'boolean'],
+            'items.*.unit' => ['nullable', 'string'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'subtotal' => ['sometimes', 'numeric', 'min:0'],
@@ -64,4 +67,5 @@ class StoreOrderRequest extends FormRequest
         ];
     }
 }
+
 

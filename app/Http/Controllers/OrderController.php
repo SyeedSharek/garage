@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class OrderController extends Controller
 {
@@ -196,10 +197,6 @@ class OrderController extends Controller
      */
     public function processPayment(Request $request, Order $order): RedirectResponse
     {
-        $validated = $request->validate([
-            'payment_type' => ['required', 'in:' . implode(',', array_column(PaymentType::cases(), 'value'))],
-        ]);
-
         $invoice = $order->invoices()->first();
 
         if (!$invoice) {
@@ -207,22 +204,43 @@ class OrderController extends Controller
                 ->with('error', 'Invoice not found for this order.');
         }
 
+        $validated = $request->validate([
+            'payment_type' => ['required', 'in:' . implode(',', array_column(PaymentType::cases(), 'value'))],
+            'paid_amount' => ['nullable', 'numeric', 'min:0', 'max:' . ($invoice->total_amount - $invoice->paid_amount)],
+        ]);
+
         $paymentType = PaymentType::from($validated['payment_type']);
+        $paidAmount = $validated['paid_amount'] ?? null;
 
         if ($paymentType === PaymentType::CASH) {
-            // Cash payment - mark as paid
+            // Determine the payment amount (use provided amount or full remaining amount)
+            $remainingAmount = $invoice->total_amount - $invoice->paid_amount;
+            $paymentAmount = $paidAmount !== null ? (float) $paidAmount : $remainingAmount;
+            $paymentAmount = min($paymentAmount, $remainingAmount);
+
+            // Calculate new paid amount
+            $newPaidAmount = $invoice->paid_amount + $paymentAmount;
+
+            // Cash payment - mark as paid or partial
             $invoice->update([
                 'payment_gateway' => PaymentGateway::CASH,
-                'paid_amount' => $invoice->total_amount,
-                'status' => PaymentStatus::PAID,
-                'paid_at' => now(),
+                'paid_amount' => $newPaidAmount,
+                'status' => $newPaidAmount >= $invoice->total_amount ? PaymentStatus::PAID : PaymentStatus::PARTIAL,
+                'paid_at' => $newPaidAmount >= $invoice->total_amount ? now() : null,
             ]);
         } elseif ($paymentType === PaymentType::CARD) {
-            // Card payment - mark as pending (payment will be processed via gateway)
+            // Card payment - process with paid amount if provided
+            $remainingAmount = $invoice->total_amount - $invoice->paid_amount;
+            $paymentAmount = $paidAmount !== null ? (float) $paidAmount : 0;
+            $paymentAmount = min($paymentAmount, $remainingAmount);
+
+            $newPaidAmount = $invoice->paid_amount + $paymentAmount;
+
             $invoice->update([
                 'payment_gateway' => PaymentGateway::CARD,
-                'paid_amount' => 0,
-                'status' => PaymentStatus::PENDING,
+                'paid_amount' => $newPaidAmount,
+                'status' => $newPaidAmount >= $invoice->total_amount ? PaymentStatus::PAID : PaymentStatus::PENDING,
+                'paid_at' => $newPaidAmount >= $invoice->total_amount ? now() : null,
             ]);
         } else {
             // Pay later - mark as due
@@ -234,8 +252,28 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'Payment processed successfully.');
+        // Redirect to success page with invoice and order data
+        $redirectData = [
+            'invoice' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'total_amount' => (float) $invoice->total_amount,
+                'paid_amount' => (float) $invoice->paid_amount,
+                'status' => $invoice->status->value,
+            ],
+            'order' => [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'customer' => $order->customer ? [
+                    'id' => $order->customer->id,
+                    'name' => $order->customer->name,
+                ] : null,
+            ],
+            'payment_type' => $validated['payment_type'],
+        ];
+
+        return redirect()->route('payments.success')
+            ->with('payment_data', $redirectData);
     }
 
     /**
@@ -245,42 +283,166 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'payment_type' => ['required', 'in:' . implode(',', array_column(PaymentType::cases(), 'value'))],
+            'paid_amount' => ['nullable', 'numeric', 'min:0', 'max:' . ($invoice->total_amount - $invoice->paid_amount)],
         ]);
 
-        $paymentType = PaymentType::from($validated['payment_type']);
+        try {
+            return DB::transaction(function () use ($validated, $invoice) {
+                $paymentType = PaymentType::from($validated['payment_type']);
+                $paidAmount = $validated['paid_amount'] ?? null;
 
-        if ($paymentType === PaymentType::CASH) {
-            // Cash payment - mark as paid
-            $invoice->update([
-                'payment_gateway' => PaymentGateway::CASH,
-                'paid_amount' => $invoice->total_amount,
-                'status' => PaymentStatus::PAID,
-                'paid_at' => now(),
+                // Update invoice payment gateway and status
+                if ($paymentType === PaymentType::CASH) {
+                    // Cash payment - create payment record
+                    $invoice->update([
+                        'payment_gateway' => PaymentGateway::CASH,
+                    ]);
+
+                    // Determine the payment amount (use provided amount or full remaining amount)
+                    $remainingAmount = $invoice->total_amount - $invoice->paid_amount;
+                    $paymentAmount = $paidAmount !== null ? (float) $paidAmount : $remainingAmount;
+
+                    // Ensure payment amount doesn't exceed remaining amount
+                    $paymentAmount = min($paymentAmount, $remainingAmount);
+
+                    // Create payment record (only if invoice has an order)
+                    if ($invoice->order_id && $paymentAmount > 0) {
+                        OrderPayment::create([
+                            'order_id' => $invoice->order_id,
+                            'invoice_id' => $invoice->id,
+                            'user_id' => auth()->id() ?? null,
+                            'payment_type' => \App\Enums\OrderPaymentType::TOTAL,
+                            'amount' => $paymentAmount,
+                            'is_paid' => true,
+                            'is_payable' => false,
+                            'payment_date' => now(),
+                        ]);
+
+                        // Refresh invoice to reload relationships
+                        $invoice->refresh();
+
+                        // Update payment status (will calculate paid_amount from payments)
+                        $invoice->updatePaymentStatus();
+                    } else if ($paymentAmount > 0) {
+                        // If no order, directly update invoice paid amount
+                        $newPaidAmount = $invoice->paid_amount + $paymentAmount;
+                        $invoice->update([
+                            'paid_amount' => $newPaidAmount,
+                            'status' => $newPaidAmount >= $invoice->total_amount ? PaymentStatus::PAID : PaymentStatus::PARTIAL,
+                            'paid_at' => $newPaidAmount >= $invoice->total_amount ? now() : null,
+                        ]);
+                    } else {
+                        // If payment amount is 0, ensure status is set correctly
+                        $invoice->refresh();
+                        $currentPaidAmount = (float) $invoice->paid_amount;
+                        if ($currentPaidAmount >= $invoice->total_amount) {
+                            $invoice->update([
+                                'status' => PaymentStatus::PAID,
+                                'paid_at' => now(),
+                            ]);
+                        } elseif ($currentPaidAmount > 0) {
+                            $invoice->update([
+                                'status' => PaymentStatus::PARTIAL,
+                            ]);
+                        }
+                    }
+                } elseif ($paymentType === PaymentType::CARD) {
+                    // Card payment - process with paid amount if provided
+                    $remainingAmount = $invoice->total_amount - $invoice->paid_amount;
+                    $paymentAmount = $paidAmount !== null ? (float) $paidAmount : 0;
+                    $paymentAmount = min($paymentAmount, $remainingAmount);
+
+                    $newPaidAmount = $invoice->paid_amount + $paymentAmount;
+
+                    // Determine status: PAID if 100%, PARTIAL if partially paid, otherwise keep current status
+                    if ($newPaidAmount >= $invoice->total_amount) {
+                        $status = PaymentStatus::PAID;
+                        $paidAt = now();
+                    } elseif ($newPaidAmount > 0) {
+                        $status = PaymentStatus::PARTIAL;
+                        $paidAt = null;
+                    } else {
+                        // No payment made, keep current status or set to DUE
+                        $status = $invoice->status;
+                        $paidAt = null;
+                    }
+
+                    $invoice->update([
+                        'payment_gateway' => PaymentGateway::CARD,
+                        'paid_amount' => $newPaidAmount,
+                        'status' => $status,
+                        'paid_at' => $paidAt,
+                    ]);
+                } else {
+                    // Pay later - mark as due
+                    $invoice->update([
+                        'payment_gateway' => PaymentGateway::CASH, // Default gateway
+                        'paid_amount' => 0,
+                        'status' => PaymentStatus::DUE,
+                        'due_date' => $invoice->due_date ?? now()->addDays(30), // Set due date 30 days from now if not set
+                    ]);
+                }
+
+                // Redirect to success page with invoice and order data
+                $redirectData = [
+                    'invoice' => [
+                        'id' => $invoice->id,
+                        'invoice_number' => $invoice->invoice_number,
+                        'total_amount' => (float) $invoice->total_amount,
+                        'paid_amount' => (float) $invoice->paid_amount,
+                        'status' => $invoice->status->value,
+                    ],
+                    'payment_type' => $validated['payment_type'],
+                ];
+
+                if ($invoice->order) {
+                    $redirectData['order'] = [
+                        'id' => $invoice->order->id,
+                        'order_number' => $invoice->order->order_number,
+                        'customer' => $invoice->order->customer ? [
+                            'id' => $invoice->order->customer->id,
+                            'name' => $invoice->order->customer->name,
+                        ] : null,
+                    ];
+                }
+
+                return redirect()->route('payments.success')
+                    ->with('payment_data', $redirectData);
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Payment processing failed', [
+                'error' => $e->getMessage(),
+                'invoice_id' => $invoice->id,
+                'trace' => $e->getTraceAsString(),
             ]);
-        } elseif ($paymentType === PaymentType::CARD) {
-            // Card payment - mark as pending (payment will be processed via gateway)
-            $invoice->update([
-                'payment_gateway' => PaymentGateway::CARD,
-                'paid_amount' => 0,
-                'status' => PaymentStatus::PENDING,
-            ]);
-        } else {
-            // Pay later - mark as due
-            $invoice->update([
-                'payment_gateway' => PaymentGateway::CASH, // Default gateway
-                'paid_amount' => 0,
-                'status' => PaymentStatus::DUE,
-                'due_date' => now()->addDays(30), // Set due date 30 days from now
-            ]);
+
+            return redirect()->route('invoices.payment', $invoice)
+                ->with('error', 'Failed to process payment: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show payment success page.
+     */
+    public function paymentSuccess(Request $request): Response|RedirectResponse
+    {
+        // Get payment data from session (set during redirect)
+        $paymentData = $request->session()->get('payment_data', []);
+
+        // If no payment data in session, redirect to orders index
+        if (empty($paymentData)) {
+            return redirect()->route('orders.index')
+                ->with('info', 'No payment data found.');
         }
 
-        if ($invoice->order) {
-            return redirect()->route('orders.show', $invoice->order)
-                ->with('success', 'Payment processed successfully.');
-        }
+        // Clear the session data
+        $request->session()->forget('payment_data');
 
-        return redirect()->route('invoices.payment', $invoice)
-            ->with('success', 'Payment processed successfully.');
+        return Inertia::render('Orders/PaymentSuccess', [
+            'invoice' => $paymentData['invoice'] ?? null,
+            'order' => $paymentData['order'] ?? null,
+            'paymentType' => $paymentData['payment_type'] ?? 'cash',
+        ]);
     }
 
     /**

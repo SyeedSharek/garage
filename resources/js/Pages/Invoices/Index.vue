@@ -29,7 +29,7 @@
               </DropdownMenuContent>
             </DropdownMenu> -->
             <Button class="gap-2 h-10" @click="handleCreateOrder">
-              <HugeiconsIcon :name="ShoppingBagIcon" class="h-4 w-4" />
+              <ion-icon name="bag-outline" class="h-4 w-4 text-primary-foreground"></ion-icon>
               Create Order
             </Button>
           </div>
@@ -40,13 +40,13 @@
           <div class="p-4 space-y-4">
             <div class="flex items-center gap-3">
               <div class="relative flex-1">
-                <HugeiconsIcon
-                  :name="Search01Icon"
+                <ion-icon
+                  name="search-outline"
                   class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                />
+                ></ion-icon>
                 <Input
                   v-model="searchQuery"
-                  placeholder="Search by invoice number, order number, customer name, phone, or email..."
+                  placeholder="Search by invoice number, customer name, phone, or email..."
                   class="pl-10 h-10"
                   @update:modelValue="handleSearch"
                 />
@@ -54,9 +54,9 @@
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
                   <Button variant="outline" class="gap-2 h-10">
-                    <HugeiconsIcon :name="FilterHorizontalIcon" class="h-4 w-4" />
+                    <ion-icon name="filter-outline" class="h-4 w-4 text-primary"></ion-icon>
                     Filters
-                    <HugeiconsIcon :name="ArrowDown01Icon" class="h-4 w-4" />
+                    <ion-icon name="chevron-down-outline" class="h-4 w-4 text-muted-foreground"></ion-icon>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -102,37 +102,30 @@
         </Card>
 
         <!-- Table Card -->
-        <DataTable
-          :columns="columns"
-          :data="invoices.data"
-          :current-page="currentPage"
-          :total-pages="totalPages"
-          :total-items="totalItems"
-          :initial-page-size="pageSize"
-          :selectable="false"
-          :draggable="false"
-          :tabs="[]"
-          @sort="handleSort"
-          @page-change="handlePageChange"
-          @page-size-change="handlePageSizeChange"
-          @action="handleAction"
-        >
+        <div class="w-full overflow-x-auto">
+          <DataTable
+            :columns="columns"
+            :data="invoices.data"
+            :current-page="currentPage"
+            :total-pages="totalPages"
+            :total-items="totalItems"
+            :initial-page-size="pageSize"
+            :selectable="false"
+            :draggable="false"
+            :tabs="[]"
+            @sort="handleSort"
+            @page-change="handlePageChange"
+            @page-size-change="handlePageSizeChange"
+            @action="handleAction"
+          >
           <template #cell-invoice_number="{ value }">
             <span class="font-mono text-sm font-medium text-foreground">{{ value || '-' }}</span>
           </template>
-          <template #cell-order_number="{ value }">
-            <span class="text-foreground">{{ value || '-' }}</span>
-          </template>
-          <template #cell-customer_name="{ value }">
-            <span class="text-foreground">{{ value || '-' }}</span>
-          </template>
-          <template #cell-customer_phone="{ value }">
-            <span class="text-foreground">{{ value || '-' }}</span>
-          </template>
-          <template #cell-payment_gateway="{ value, row }">
-            <Badge variant="secondary" class="text-xs">
-              {{ row.payment_gateway_label }}
-            </Badge>
+          <template #cell-customer_name="{ value, row }">
+            <div class="flex flex-col">
+              <span class="text-foreground font-medium">{{ value || '-' }}</span>
+              <span v-if="row.customer_phone" class="text-sm text-muted-foreground">{{ row.customer_phone }}</span>
+            </div>
           </template>
           <template #cell-status="{ value, row }">
             <Badge
@@ -153,27 +146,43 @@
               {{ row.formatted_remaining_amount || `QR ${parseFloat(value || 0).toFixed(2)}` }}
             </span>
           </template>
-          <template #cell-invoice_date="{ value }">
-            <span class="text-foreground">{{ value ? formatDate(value) : '-' }}</span>
-          </template>
-          <template #cell-due_date="{ value }">
-            <span class="text-foreground" :class="isOverdue(value) ? 'text-red-600 font-medium' : ''">
-              {{ value ? formatDate(value) : '-' }}
-            </span>
+          <template #cell-payment_dates="{ row }">
+            <div class="flex flex-col gap-1">
+              <div v-if="row.paid_at" class="text-sm">
+                <span class="text-muted-foreground">Paid:</span>
+                <span class="text-foreground ml-1">{{ formatDate(row.paid_at) }}</span>
+              </div>
+              <div class="text-sm">
+                <span class="text-muted-foreground">Due:</span>
+                <span
+                  class="ml-1"
+                  :class="isOverdue(row.due_date) ? 'text-red-600 font-medium' : 'text-foreground'"
+                >
+                  {{ row.due_date ? formatDate(row.due_date) : '-' }}
+                </span>
+              </div>
+            </div>
           </template>
           <template #actions="{ row }">
             <div class="flex items-center gap-2">
               <Button variant="outline" size="sm" class="h-8" @click="handleView(row)">
-                <HugeiconsIcon :name="File01Icon" class="h-4 w-4 mr-1" />
+                <ion-icon name="document-text-outline" class="h-4 w-4 mr-1 text-primary"></ion-icon>
                 View
               </Button>
-              <Button variant="default" size="sm" class="h-8" @click="handlePay(row)">
-                <HugeiconsIcon :name="DollarIcon" class="h-4 w-4 mr-1" />
+              <Button
+                v-if="!isInvoiceFullyPaid(row)"
+                variant="default"
+                size="sm"
+                class="h-8"
+                @click="handlePay(row)"
+              >
+                <ion-icon name="cash-outline" class="h-4 w-4 mr-1 text-primary-foreground"></ion-icon>
                 Pay
               </Button>
             </div>
           </template>
-        </DataTable>
+          </DataTable>
+        </div>
       </div>
     </template>
   </MainLayout>
@@ -183,18 +192,7 @@
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
-import { HugeiconsIcon } from '@hugeicons/vue';
-import {
-  Menu01Icon,
-  Add01Icon,
-  Download01Icon,
-  ArrowDown01Icon,
-  Search01Icon,
-  FilterHorizontalIcon,
-  ShoppingBagIcon,
-  File01Icon,
-  DollarIcon,
-} from '@hugeicons/core-free-icons';
+// Ionicons are used as web components with string names
 import MainLayout from '@/Components/layout/MainLayout.vue';
 import AppSidebar from '@/Components/layout/AppSidebar.vue';
 import AppHeader from '@/Components/layout/AppHeader.vue';
@@ -252,16 +250,12 @@ const debouncedSearch = useDebounceFn((value) => {
 
 const columns = [
   { key: 'invoice_number', label: 'Invoice Number', sortable: true },
-  { key: 'order_number', label: 'Order Number', sortable: true },
   { key: 'customer_name', label: 'Customer', sortable: true },
-  { key: 'customer_phone', label: 'Phone', sortable: false },
-  { key: 'payment_gateway', label: 'Payment Method', sortable: true },
-  { key: 'status', label: 'Status', sortable: true },
   { key: 'total_amount', label: 'Total', sortable: true },
   { key: 'paid_amount', label: 'Paid', sortable: true },
   { key: 'remaining_amount', label: 'Remaining', sortable: true },
-  { key: 'invoice_date', label: 'Invoice Date', sortable: true },
-  { key: 'due_date', label: 'Due Date', sortable: true },
+  { key: 'payment_dates', label: 'Payment Dates', sortable: false },
+  { key: 'status', label: 'Status', sortable: true },
 ];
 
 const currentPage = computed(() => props.invoices.current_page || 1);
@@ -366,7 +360,7 @@ const handleCreateOrder = () => {
 };
 
 const handleView = (row) => {
-  router.visit(route('invoices.show', row.id));
+  window.open(route('invoices.print', row.id), '_blank');
 };
 
 const handlePay = (row) => {
@@ -433,6 +427,11 @@ const isOverdue = (dueDateString) => {
   today.setHours(0, 0, 0, 0);
   dueDate.setHours(0, 0, 0, 0);
   return dueDate < today;
+};
+
+const isInvoiceFullyPaid = (row) => {
+  // Check if invoice is fully paid by status or remaining amount
+  return row.status === 'paid' || parseFloat(row.remaining_amount || 0) <= 0;
 };
 </script>
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,7 @@ use App\Traits\GeneratesUniqueNumber;
 
 class Order extends Model
 {
-    use SoftDeletes, HasNotes, GeneratesUniqueNumber;
+    use HasFactory, SoftDeletes, HasNotes, GeneratesUniqueNumber;
     protected $fillable = [
         'order_number',
         'customer_id',

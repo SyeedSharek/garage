@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use App\Traits\HasNotes;
 
 class Service extends Model
 {
-    use SoftDeletes, HasTranslations, HasNotes;
+    use HasFactory, SoftDeletes, HasTranslations, HasNotes;
 
     protected $fillable = [
         'code',
@@ -20,6 +21,7 @@ class Service extends Model
         'unit_price',
         'unit',
         'is_active',
+        'is_custom',
         'sort_order',
     ];
 
@@ -31,6 +33,7 @@ class Service extends Model
     protected $casts = [
         'unit_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_custom' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -72,6 +75,11 @@ class Service extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function scopeSystem($query)
+    {
+        return $query->where('is_custom', false);
     }
 
     // Get raw values

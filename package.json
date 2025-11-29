@@ -30,6 +30,7 @@
         "@inertiajs/inertia-vue3": "^0.6.0",
         "@vueuse/core": "^14.1.0",
         "apexcharts": "^5.3.6",
+        "ionicons": "^8.0.13",
         "lucide-vue-next": "^0.555.0",
         "reka-ui": "^2.6.0",
         "sass": "^1.94.2",

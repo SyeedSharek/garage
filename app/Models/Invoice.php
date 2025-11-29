@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,7 @@ use App\Traits\GeneratesUniqueNumber;
 
 class Invoice extends Model
 {
-    use SoftDeletes, HasNotes, GeneratesUniqueNumber;
+    use HasFactory, SoftDeletes, HasNotes, GeneratesUniqueNumber;
     protected $fillable = [
         'invoice_number',
         'order_id',
@@ -86,23 +87,21 @@ class Invoice extends Model
     {
         $this->paid_amount = (float) $this->payments()->sum('amount');
 
-        if ($this->payment_gateway === PaymentGateway::CASH) {
-            $this->status = $this->paid_amount >= $this->total_amount
-                ? PaymentStatus::PAID
-                : PaymentStatus::PENDING;
+        // Determine status based on paid amount
+        if ($this->paid_amount >= $this->total_amount) {
+            // 100% paid - status is PAID
+            $this->status = PaymentStatus::PAID;
+            $this->paid_at = $this->paid_at ?? now();
+        } elseif ($this->paid_amount > 0) {
+            // Partially paid - status is PARTIAL
+            $this->status = PaymentStatus::PARTIAL;
         } else {
-            // For card payments, check payment status
-            if ($this->paid_amount >= $this->total_amount) {
-                $this->status = PaymentStatus::PAID;
-                $this->paid_at = now();
-            } elseif ($this->paid_amount > 0) {
-                $this->status = PaymentStatus::PARTIAL;
-            } elseif ($this->due_date && \Carbon\Carbon::parse($this->due_date)->isPast()) {
+            // No payment made - check if overdue, otherwise keep DUE status
+            if ($this->due_date && \Carbon\Carbon::parse($this->due_date)->isPast()) {
                 $this->status = PaymentStatus::OVERDUE;
-            } elseif ($this->due_date && \Carbon\Carbon::parse($this->due_date)->isToday()) {
+            } elseif ($this->status !== PaymentStatus::DUE && $this->status !== PaymentStatus::DRAFT) {
+                // If not already DUE or DRAFT, set to DUE
                 $this->status = PaymentStatus::DUE;
-            } else {
-                $this->status = PaymentStatus::PENDING;
             }
         }
 
