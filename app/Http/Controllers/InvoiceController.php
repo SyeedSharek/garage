@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentGateway;
+use App\Services\InvoiceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -226,5 +227,32 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')
             ->with('success', 'Invoice deleted successfully.');
     }
+
+
+
+    public function showInvoice()
+    {
+        $services = InvoiceService::getServices();
+        return view('invoice.invoice', compact('services'));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
