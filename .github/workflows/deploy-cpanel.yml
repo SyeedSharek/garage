@@ -46,7 +46,7 @@ jobs:
       - name: 🔨 Build Frontend
         run: |
           npm install
-          npm run build:ssr
+          npm run build
 
       # 8. Prepare Laravel environment for testing
       - name: 🛠 Prepare Laravel environment for testing
@@ -104,7 +104,7 @@ jobs:
       - name: 🔨 Build Frontend
         run: |
           npm install
-          npm run build:ssr
+          npm run build
       # 7. Run database migrations (only if needed)
       - name: 🗄️ Run Database Migrations
         run: |
