@@ -11,9 +11,9 @@ use Inertia\Response;
 class CustomerController extends Controller
 {
     /**
-     * Display a listing of the customers.
+     * Display a listing of the customers. test data
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response 
     {
         $query = Customer::query();
 
