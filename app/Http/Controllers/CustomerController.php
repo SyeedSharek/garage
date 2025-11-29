@@ -11,7 +11,7 @@ use Inertia\Response;
 class CustomerController extends Controller
 {
     /**
-     * Display a listing of the customers.
+     * Display a listing of the customers. 
      */
     public function index(Request $request): Response
     {
