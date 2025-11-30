@@ -51,14 +51,11 @@ jobs:
       # 8. Prepare Laravel environment for testing
       - name: 🛠 Prepare Laravel environment for testing
         run: |
-          cp .env.example .env.testing
-          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env.testing
-          echo "DB_CONNECTION=sqlite" >> .env.testing
-          echo "DB_DATABASE=database/database.sqlite" >> .env.testing
-          echo "CACHE_DRIVER=array" >> .env.testing
-          echo "QUEUE_CONNECTION=sync" >> .env.testing
-          mkdir -p database
-          touch database/database.sqlite
+          cp .env.example .env
+          php artisan key:generate
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env
+          echo "DB_CONNECTION=mysql" >> .env
+         
 
       # 9. Run database migrations (only if needed)
       - name: 🗄️ Run Database Migrations

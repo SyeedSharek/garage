@@ -71,41 +71,35 @@
             <div>
                 <div class="flex justify-between items-start mb-1">
 
-                    <div class="w-[28%] text-xs text-gray-700 space-y-[1px] leading-tight">
-                        <p>Mob: +974 3005 5831 / Tel: 4142 3974</p>
-                        <p>C.R. No: 162700, P.O. Box: 37206</p>
-                        <p>Street No: 105, Zone: 57</p>
-                        <p>Bldg No: 183, Wakalat Street: 28</p>
-                        <p>Shop No: 10/11, Industrial Area</p>
-                        <p class="font-bold mt-1">BRANCH: AL AZIZIYA, SALWA ROAD</p>
-                        <p>Mob: +974 7770 6384 / Tel: 4145 8911</p>
-                        <p>C.R: 162700 / 01 Unit: 18, ZONE: 55,</p>
-                        <p>STREET: 185, NEAR QATARPOST AZIZIYA</p>
-                        <p>SALWA ROAD, DOHA - QATAR</p>
-                        <p>E-mail: infoautotabpartsqatar@gmail.com</p>
-                    </div>
+                    <div class="w-[28%]  text-md text-gray-700 space-y-[1px] leading-tight">
+                        <p>Mob: 50197248 </p>
+                        <p>C.R. No: 199989</p>
+                        <p>Al Hilal, Nuaija</p>
+                        <p>DOHA-QATAR</p>
 
+
+                    </div>
+{{--
                     <div class="w-[44%] ">
                         <div class="flex justify-center items-center mb-2 ">
                             <img src="{{ asset('assets/full logo and name.png') }}" alt="Logo with Company Name" class="w-full h-auto object-contain max-h-36 mx-auto">
                         </div>
+                    </div> --}}
+
+
+                    <div class="w-[44%] ">
+                        <div class=" mb-2 text-md font-bold text-center">
+                            <p class="mb-1">شهباز لخدمات السيارات والخدمات</p>
+                            <p class="mb-1">SHAHBAZ AUTO SERVICE & TRADING</p>
+                            <p>Cash/Credit Invoice    فاتورة نقدا على / الحساب  </p>
+                        </div>
                     </div>
 
                     <div class="w-[28%] text-xs text-right text-gray-700 space-y-[1px] leading-tight" dir="rtl">
-                        <p>هاتف: ٤١٤٢٣٩٧٤ / ٣٠٠٥٥٨٣١</p>
-                        <p>جوال: ٧٧٧٩٠٦٨٤ / ٤١٤٥٨٩١١</p>
-                        <p>ص.ب: ٣٧٢٠٦</p>
-                        <p>س.ت: ١٦٢٧٠٠</p>
-                        <p>شارع رقم: ١٠٥ المنطقة: ٥٧</p>
-                        <p>رقم المبنى: ١٨٣، شارع الوكالات: ٢٨</p>
-                        <p>محل رقم: ١٠/١١، منطقة صناعية</p>
-                        <p class="font-bold">الفرع: العزيزية، طريق سلوى</p>
-                        <p>هاتف: ٤١٤٥٨٩١١</p>
-                        <p>جوال: ٧٧٧٩٠٦٣٨</p>
-                        <p>س.ت: ١٨٢٧٠٠ / ٠١</p>
-                        <p>الوحدة: ١٨ المنطقة: ٥٥ الشارع: ١٨٥</p>
-                        <p>بالقرب من: بريد قطر العزيزية، طريق سلوى</p>
-                        <p>الموقع: الدوحة، قطر</p>
+                        <p>جوال :  ٥٠١٩٧٢٤٨</p>
+                        <p> ست :  ۱۹۹۹۸۹</p>
+                        <p>الهلال ,   نعيجة</p>
+                        <p>الدوحة - قطر</p>
                     </div>
                 </div>
 
