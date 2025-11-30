@@ -6,7 +6,10 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 
 Route::get('/', function () {
-    return Inertia::render('Frontend/LandingPage');
+    return Inertia::render('Frontend/LandingPage', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+    ]);
 });
 
 Route::get('/dashboard', function () {
